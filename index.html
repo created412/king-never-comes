@@ -206,7 +206,7 @@ button{font-family:inherit;cursor:pointer;}
 .hbtn.off{opacity:.4;}
 
 /* ══ 위협 씬 (실시간 접근) ══ */
-#threatStrip{flex-shrink:0;height:92px;position:relative;overflow:hidden;background:#07030c;
+#threatStrip{flex-shrink:0;height:64px;position:relative;overflow:hidden;background:#07030c;
   border-bottom:2px solid #6b2408;}
 #threatArt{position:absolute;inset:0;background-size:cover;background-position:center 58%;
   transition:background-image .6s,filter .8s;}
@@ -235,68 +235,258 @@ button{font-family:inherit;cursor:pointer;}
   color:rgba(180,130,60,.5);letter-spacing:1px;}
 .wt-marks span.on{color:#ff9060;font-weight:700;}
 
+/* ═══ 카드 ═══
+   봉건 계약은 원래 문서다. 땅과 봉사를 카드로 만들어 탁자에 올린다.
+   3D는 CSS transform 만 쓴다 — #stage 가 이미 scale() 되어 있으므로
+   perspective 를 #stage 에 걸면 배율과 원근이 겹쳐 화면 크기마다
+   카드가 다르게 기울어진다. 원근은 카드가 사는 컨테이너에만 건다.
+═══════════════════════════════════════════════════ */
+:root{--card-w:88px;--card-h:140px;--card-r:6px;--sv-w:98px;--sv-h:134px;}
+html.mob{--card-w:78px;--card-h:108px;--sv-w:86px;--sv-h:116px;}
+
+.cardZone{perspective:1400px;perspective-origin:50% 40%;}
+
+.card{position:relative;width:var(--card-w);height:var(--card-h);flex-shrink:0;
+  border-radius:var(--card-r);cursor:pointer;transform-style:preserve-3d;
+  transition:transform .26s cubic-bezier(.2,.9,.25,1);}
+/* 그림자는 카드가 아니라 면에 건다 — filter 를 카드에 걸면 preserve-3d 가
+   평면화되어 backface-visibility 가 무력해지고, 뒤집어도 앞면이 거울처럼 비친다. */
+.card .face{filter:drop-shadow(0 4px 7px rgba(0,0,0,.55));transition:filter .26s;}
+.card .face{position:absolute;inset:0;border-radius:var(--card-r);overflow:hidden;
+  backface-visibility:hidden;border:2px solid #6b4418;background:#2a1c0c;
+  display:flex;flex-direction:column;}
+
+/* ── 두 패는 색으로 갈라진다 ──
+   내가 내주는 땅은 흙과 양피지의 빛, 그들이 내놓는 봉사는 강철과 검의 빛.
+   탁자 위에 섞여 놓여도 어느 쪽이 무엇인지 한눈에 보여야 한다. */
+.card.land .face{border-width:3px;border-color:#b8892c;
+  background:linear-gradient(168deg,#5a4318,#2e2109);
+  box-shadow:inset 0 0 22px rgba(0,0,0,.55),inset 0 0 0 1px rgba(230,195,120,.22);}
+.card.land .cv-nm{color:#ffe9c0;background:linear-gradient(180deg,rgba(58,40,12,.92),rgba(20,13,3,.96));
+  border-top:1px solid rgba(200,160,80,.35);}
+.card.land .cv-v{background:rgba(30,20,4,.88);color:#ffd070;border:1px solid rgba(200,160,80,.5);}
+
+.svc-card .face{border-width:3px;border-color:#4d8ac2;
+  background:linear-gradient(168deg,#1d3550,#0c1622);
+  box-shadow:inset 0 0 22px rgba(0,0,0,.6),inset 0 0 0 1px rgba(140,190,235,.2);}
+.svc-card .cv-nm{color:#dceaf8;background:linear-gradient(180deg,rgba(16,38,60,.94),rgba(5,12,20,.96));
+  border-top:1px solid rgba(120,175,225,.35);}
+.svc-card .sv-meta{background:rgba(6,16,26,.88);color:#9fd0ff;border:1px solid rgba(120,175,225,.45);}
+.svc-card .sv-bur{background:rgba(6,16,26,.88);color:#f0b0a0;border:1px solid rgba(200,120,100,.45);}
+.svc-card.dead .face{filter:grayscale(.85) brightness(.42);}
+.card .face.back{transform:rotateY(180deg);
+  background:linear-gradient(160deg,#3a2510,#1d1206);border-color:#5a3a18;}
+.card.flip{transform:rotateY(180deg);}
+.card.lift{transform:translateY(-16px) translateZ(58px) rotateX(-4deg);}
+.card.lift .face{filter:drop-shadow(0 18px 22px rgba(0,0,0,.62));}
+.card.dead{cursor:default;}
+.card.dead .face{filter:grayscale(1) brightness(.34);}
+
+/* 땅 카드 앞면 */
+.card .cv-img{position:relative;flex:1;min-height:0;}
+.card .cv-img::after{content:'';position:absolute;inset:0;pointer-events:none;}
+.card.land .cv-img::after{background:linear-gradient(180deg,rgba(190,140,40,.20),rgba(90,55,10,.34));
+  box-shadow:inset 0 0 24px rgba(120,70,10,.5);}
+.svc-card .cv-img::after{background:linear-gradient(180deg,rgba(60,130,200,.26),rgba(10,40,80,.44));
+  box-shadow:inset 0 0 24px rgba(10,50,100,.6);}
+.card .cv-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.card .cv-nm{flex-shrink:0;padding:4px 5px;font-size:12.5px;font-weight:700;
+  text-align:center;color:#ffe9c0;background:rgba(0,0,0,.82);line-height:1.25;}
+.card .cv-v{position:absolute;top:4px;right:5px;font-size:12px;font-weight:900;
+  padding:1px 5px;border-radius:8px;background:rgba(0,0,0,.72);color:#ffd070;z-index:2;}
+.card .cv-tg{position:absolute;top:3px;left:4px;z-index:2;font-size:9.5px;font-weight:900;
+  color:#ffb090;background:rgba(90,10,0,.85);padding:1px 5px;border-radius:8px;}
+
+/* ── 요구 카드(봉사) ── 태그를 카드 위에 얹는다. 따로 설명 칸을 두면
+   카드가 작아지고, 작아지면 안 보인다. */
+.svc-card .sv-meta{position:absolute;top:3px;left:4px;z-index:2;font-size:10.5px;font-weight:900;
+  color:#ffd070;background:rgba(0,0,0,.8);padding:1px 5px;border-radius:8px;}
+.svc-card .sv-bur{position:absolute;top:3px;right:4px;z-index:2;font-size:10px;font-weight:900;
+  color:#e8b0a0;background:rgba(0,0,0,.8);padding:1px 5px;border-radius:8px;}
+.svc-card .sv-warn{position:absolute;top:22px;right:4px;z-index:2;font-size:11px;font-weight:900;
+  color:#ffc0a0;background:rgba(170,45,10,.92);padding:0 5px;border-radius:8px;}
+.svc-card .sv-by{position:absolute;bottom:34px;left:0;right:0;z-index:2;text-align:center;
+  font-size:10px;font-weight:900;color:#9fd8a8;background:rgba(6,20,8,.86);padding:1px 0;}
+.svc-card .sv-term{flex-shrink:0;text-align:center;font-size:10.5px;font-weight:700;color:#9cc8f0;
+  background:rgba(10,26,44,.88);padding:1px 2px;line-height:1.25;}
+.svc-card.picked .face,.svc-card.on-table .face{border-color:#8fd0ff;
+  box-shadow:0 0 0 2px rgba(140,200,255,.55),0 0 22px rgba(80,170,255,.5);}
+.card.land.on-table .face{border-color:#ffd060;
+  box-shadow:0 0 0 2px rgba(255,208,96,.5),0 0 20px rgba(255,180,50,.5);}
+
+/* 고른 봉신의 한 줄 요약 — 자리 아래에 붙는다 */
+.st-hold{font-size:10.5px;color:#c8a878;line-height:1.3;max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+
+/* 애니메이션 중에만 합성 레이어를 만든다 — 상시로 걸면 폰에서 레이어가 터진다 */
+.card.anim{will-change:transform;}
+
+html.lowfx .card{transition-duration:.16s;}
+html.lowfx #handFan .card{transform:rotate(calc(var(--d) * 1.3deg)) rotateX(3deg);}
+
+html.lowfx .card .face{filter:none;box-shadow:0 3px 6px rgba(0,0,0,.5);}
+
+@media (prefers-reduced-motion: reduce){
+  .card,.card .face{transition:none;}
+  .card.lift{transform:translateY(-10px);}
+  .card.flip{transform:none;}
+}
+
 /* ═══ 막1 레이아웃 ═══ */
-#act1Body{flex:1;display:grid;grid-template-columns:410px 1fr 330px;min-height:0;}
-.pane{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
-.pane-h{flex-shrink:0;padding:8px 14px 6px;text-align:center;position:relative;}
+/* ═══ 막1 — 협상 탁자 ═══
+   카드 게임의 필드 구성이다. 탁자 건너편에 봉신 셋이 서고, 계약은 기울어진
+   탁자면 위에 놓이며, 내 손패는 화면 아래에서 부채꼴로 펼쳐진다.
+   원근은 #stage 가 아니라 각 구역에 건다 — #stage 는 이미 scale() 로
+   축소되므로 거기에 걸면 화면 크기마다 기울기가 달라진다. */
+#act1Body{flex:1;display:grid;grid-template-rows:1fr auto;min-height:0;
+  background:radial-gradient(ellipse at 50% 4%,rgba(96,64,22,.36),transparent 60%),
+             linear-gradient(180deg,#1d1206,#110a03 48%,#241605);}
+#act1Body>*{min-width:0;}
+
+/* ── 탁자 건너편 · 봉신 셋 ──
+   초상 옆에 이름·기분·상태를 눕혀 높이를 아낀다. 세로로 쌓으면 이 한 줄이
+   탁자면에서 그만큼을 빼앗고, 그러면 카드가 다시 작아진다. */
+#vasSeats{flex-shrink:0;display:flex;justify-content:center;gap:16px;padding:2px 14px 0;}
+#vasSeats .seat{flex:0 1 282px;min-width:0;display:flex;gap:9px;align-items:flex-start;
+  padding:5px 8px;border-radius:4px;cursor:pointer;transition:.2s;
+  background:linear-gradient(165deg,rgba(58,40,18,.72),rgba(26,17,6,.82));
+  border:2px solid #5a3a14;transform:rotateX(4deg);}
+#vasSeats .seat:hover{border-color:#a87830;transform:rotateX(1deg) translateY(-2px);}
+#vasSeats .seat.act{border-color:#ffd060;transform:rotateX(0deg) translateY(-3px) scale(1.03);
+  background:linear-gradient(165deg,rgba(98,70,28,.85),rgba(44,30,10,.9));
+  box-shadow:0 0 22px rgba(255,190,60,.3);}
+#vasSeats .seat.done{border-color:#3a8a52;}
+#vasSeats .seat.gone{opacity:.32;filter:grayscale(.85);}
+.st-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+.por-frame{position:relative;flex-shrink:0;width:68px;height:84px;border-radius:3px;overflow:hidden;
+  border:2px solid #8a6a2a;background:#1a1004;
+  box-shadow:0 7px 16px rgba(0,0,0,.62),inset 0 0 18px rgba(0,0,0,.45);}
+#vasSeats .seat.act .por-frame{border-color:#ffd070;
+  box-shadow:0 0 24px rgba(255,190,60,.55),0 7px 16px rgba(0,0,0,.62);}
+#vasSeats .seat.done .por-frame{border-color:#4aa864;}
+.st-por{width:100%;height:100%;object-fit:cover;display:block;}
+.st-nm{font-size:14px;font-weight:900;color:#f0d49a;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;max-width:100%;}
+.st-bar{width:100%;height:6px;border-radius:3px;background:#1a1004;overflow:hidden;
+  border:1px solid rgba(120,80,30,.5);}
+.st-fill{height:100%;transition:width .5s,background .5s;}
+.st-st{font-size:11px;font-weight:700;}
+.st-pile{display:flex;gap:3px;flex-wrap:wrap;min-height:0;}
+
+/* ── 그들이 들고 있는 패 ──
+   봉사는 내 것이 아니라 그들이 내놓는 것이다. 그래서 탁자 건너편,
+   봉신들 바로 아래에 놓인다. 나는 그중 하나를 고를 뿐이다. */
+#theirHand{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;}
+.th-h{font-size:10.5px;letter-spacing:1px;color:#a8d060;font-weight:700;line-height:1.25;}
+#demandRow{display:flex;justify-content:center;gap:9px;overflow:visible;
+  min-height:calc(var(--sv-h) + 10px);}
+#demandRow .card{--card-w:var(--sv-w);--card-h:var(--sv-h);transform:rotateX(9deg);}
+#demandRow .card:hover,#demandRow .card.picked{
+  transform:translateY(-12px) translateZ(56px) rotateX(0deg) scale(1.05);}
+
+
+/* ── 계약이 놓이는 자리 · 기울어진 탁자면 ── */
+#negField{position:relative;min-height:0;display:flex;flex-direction:column;
+  align-items:stretch;justify-content:center;gap:2px;
+  perspective:1100px;perspective-origin:50% 24%;padding:2px 14px 3px;}
+/* ── 가운데 탁자면 ── 작은 사본을 눕혀 놓는다 */
+#offerRow{flex-shrink:0;display:flex;gap:26px;align-items:flex-start;justify-content:center;
+  transform:rotateX(20deg);transform-style:preserve-3d;}
+#offerRow .card{--card-w:64px;--card-h:86px;--sv-w:64px;--sv-h:86px;}
+.fzone{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.fz-h{font-size:10px;letter-spacing:1px;color:#d8a850;font-weight:700;white-space:nowrap;}
+.fslot{display:flex;gap:8px;align-items:center;justify-content:center;
+  min-width:calc(var(--card-w) * 2 + 22px);min-height:calc(var(--card-h) + 8px);
+  padding:4px 8px;border-radius:5px;border:2px dashed rgba(190,140,55,.5);
+  background:radial-gradient(ellipse at 50% 50%,rgba(140,95,25,.26),rgba(40,25,8,.2));
+  box-shadow:inset 0 0 26px rgba(0,0,0,.55);transition:.18s;}
+#offerRow .fzone.narrow .fslot{min-width:calc(78px + 24px);
+  border-color:rgba(90,150,205,.5);
+  background:radial-gradient(ellipse at 50% 50%,rgba(30,70,110,.28),rgba(8,20,32,.2));}
+.fzone.narrow .fz-h{color:#8fc0e8;}
+#tableSlot.over{border-color:#ffd070;
+  background:radial-gradient(ellipse at 50% 50%,rgba(220,165,45,.42),rgba(60,35,8,.3));}
+.slot-hint{font-size:10.5px;color:#8a6a3e;text-align:center;line-height:1.4;}
+
+/* 드래그로 카드를 협상장 쪽으로 끌어 올리면 그 자리가 밝아진다 */
+#negField.over{box-shadow:inset 0 0 0 2px rgba(255,208,112,.55),inset 0 0 60px rgba(180,130,40,.22);
+  border-radius:6px;}
+
+/* 고른 카드는 제자리에서 솟아올라 빛난다 — 그것이 "탁자에 올렸다"는 표시다 */
+#handFan .card.on-table{z-index:3;}
+#handFan .card.on-table .face{border-color:#ffd060;
+  box-shadow:0 0 0 2px rgba(255,208,96,.6),0 0 26px rgba(255,180,50,.6);}
+#demandRow .card.picked .face{border-color:#8fd0ff;
+  box-shadow:0 0 0 2px rgba(140,200,255,.6),0 0 26px rgba(80,170,255,.6);}
+
+/* 대사는 탁자 왼쪽 빈 자리에 떠 있다 — 카드는 가운데 놓이고 봉신은 위에 서므로
+   그 둘을 가리지 않는 곳이 여기뿐이다. */
+#dlgZone{position:absolute;left:16px;bottom:6px;width:30%;max-width:380px;z-index:6;
+  display:flex;flex-direction:column;gap:5px;pointer-events:none;}
+#dlgZone .dlg{pointer-events:auto;font-size:12.5px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+
+/* ── 행동 ── */
+/* 행동은 손패 오른쪽에 세로로 쌓는다 — 아래에 따로 한 단을 두면
+   그만큼 카드가 작아진다. 가로 공간은 남고 세로가 모자란다. */
+#handBar{display:flex;align-items:flex-end;gap:14px;min-height:0;}
+#negAct{flex:0 0 386px;display:flex;flex-direction:column;gap:4px;padding:0 0 2px;
+  border:none;background:none;}
+#selLine{font-size:11.5px;color:#d8b880;line-height:1.35;margin:0;
+  max-height:30px;overflow:hidden;}
+#toggleRow{display:flex;gap:6px;}
+#toggleRow>div{flex:1;min-width:0;}
+#negBtns{display:flex;gap:8px;}
+#negAct #renewBox,#negAct #hereBox{width:auto;margin:0;padding:3px 7px;min-height:44px;
+  max-height:44px;overflow:hidden;}
+#negAct .rn-nm,#negAct .hb-nm{font-size:10.5px;line-height:1.2;}
+#negAct .rn-ds,#negAct .hb-ds{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;font-size:8.5px;line-height:1.25;margin-top:1px;}
+#negBtns .nbtn{flex:1;padding:9px 4px;font-size:12px;letter-spacing:0;white-space:nowrap;
+  min-height:44px;}
+/* 토글은 행동 바 안의 칩이다 — 원래 세로 목록용 여백을 덮어쓴다 */
+#negAct #renewBox,#negAct #hereBox{flex:0 0 auto;width:178px;margin:0;padding:4px 8px;
+  min-height:44px;max-height:50px;overflow:hidden;}
+#negAct .rn-nm,#negAct .hb-nm{font-size:10.5px;line-height:1.2;}
+#negAct .rn-ds,#negAct .hb-ds{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;font-size:8.5px;line-height:1.25;margin-top:1px;}
+
+/* ── 내 손패 ── */
+#handRow{flex-shrink:0;padding:2px 14px 6px;border-top:3px solid #5a3410;
+  background:linear-gradient(180deg,rgba(24,15,5,.96),rgba(46,30,11,.98));perspective:1200px;}
+#handRow .hand-h{font-size:10.5px;letter-spacing:1px;color:#d8a850;font-weight:700;
+  text-align:left;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  padding-left:4px;}
+#handRow #handNote{font-weight:400;color:#b89a68;letter-spacing:0;margin-left:10px;}
+#handFan{flex:1;min-width:0;display:flex;justify-content:center;align-items:flex-end;gap:4px;overflow:visible;
+  min-height:calc(var(--card-h) + 8px);padding:3px 6px 16px;}
+/* 부채꼴 — 회전축을 카드 아래 모서리에 둔다. 축을 카드 밖(130%)에 두면
+   바깥쪽 카드가 크게 휘돌아 무대 아래로 처진다. */
+#handFan .card{transform-origin:50% 100%;
+  transform:rotate(calc(var(--d) * 1.2deg)) translateY(calc(max(var(--d),-1 * var(--d)) * -2px))
+            rotateX(8deg);}
+#handFan .card:hover,#handFan .card.lift,#handFan .card.on-table{
+  transform:rotate(calc(var(--d) * .8deg)) translateY(-24px) translateZ(72px) rotateX(0deg) scale(1.06);}
+.card.burning{animation:cdBurn .3s ease forwards;}
+@keyframes cdBurn{
+  0%  {filter:drop-shadow(0 4px 7px rgba(0,0,0,.55));}
+  35% {filter:brightness(2.2) sepia(.6) drop-shadow(0 0 22px rgba(255,90,0,.95));}
+  100%{transform:translateY(34px) rotate(9deg) scale(.86);opacity:0;
+       filter:grayscale(1) brightness(.3);}
+}
+@media (prefers-reduced-motion: reduce){ .card.burning{animation:none;opacity:0;} }
+#handFan .card.target .face{animation:cdTg 1.1s ease infinite;}
+@keyframes cdTg{0%,100%{filter:drop-shadow(0 4px 7px rgba(0,0,0,.55));}
+  50%{filter:drop-shadow(0 0 18px rgba(255,70,0,.9)) drop-shadow(0 4px 7px rgba(0,0,0,.55));}}
+
+/* 막2에서 아직 쓰는 제목 두 줄만 남긴다 — 지도·봉신 띠·봉사 목록 규칙은
+   카드 협상으로 바뀌며 전부 죽었다. */
 .ph-t{font-size:13.5px;font-weight:900;letter-spacing:2.5px;}
 .ph-s{font-size:11.5px;opacity:.62;margin-top:1px;}
-.pane-h::after{content:'';position:absolute;left:12%;right:12%;bottom:0;height:2px;
-  background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:.4;}
 
-/* 좌: 영지 지도 */
-#mapPane{background:linear-gradient(170deg,rgba(58,42,22,.90),rgba(28,18,8,.96)),var(--mapbg) center/cover;border-right:3px solid #5a3410;}
-#mapPane .pane-h{color:#d8a850;}
-#mapGrid{flex-shrink:0;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:10px 12px;}
-.parcel{position:relative;aspect-ratio:1/.86;border-radius:3px;overflow:hidden;cursor:pointer;
-  border:2px solid #6b4418;background:#2a1c0c;transition:.16s;}
-.parcel img{width:100%;height:100%;object-fit:cover;display:block;}
-.parcel .pc-nm{position:absolute;left:0;right:0;bottom:0;padding:3px 4px;font-size:10.5px;
-  font-weight:700;text-align:center;color:#ffe9c0;background:linear-gradient(transparent,rgba(0,0,0,.86));
-  line-height:1.25;}
-.parcel .pc-v{position:absolute;top:3px;right:4px;font-size:10px;font-weight:900;padding:1px 5px;
-  border-radius:8px;background:rgba(0,0,0,.72);color:#ffd070;}
-.parcel:hover{border-color:#e0a840;transform:translateY(-2px);box-shadow:0 5px 14px rgba(0,0,0,.6);}
-.parcel.sel{border-color:#ffd060;box-shadow:0 0 0 2px rgba(255,208,96,.5),0 0 20px rgba(255,180,50,.55);}
-.parcel.given{cursor:default;filter:grayscale(.55) brightness(.5);}
-.parcel.given::after{content:attr(data-owner);position:absolute;inset:0;display:flex;
-  align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#9fd8a8;
-  background:rgba(8,20,10,.66);letter-spacing:.5px;text-align:center;padding:4px;}
-.parcel.burnt{cursor:default;filter:grayscale(1) brightness(.32);}
-.parcel.burnt::after{content:'🔥 불탐';position:absolute;inset:0;display:flex;align-items:center;
-  justify-content:center;font-size:12px;font-weight:900;color:#ff8855;background:rgba(30,4,0,.72);}
-.parcel.home{cursor:default;border-color:#c08a2a;}
-.parcel.home::after{content:'본거지';position:absolute;top:3px;left:4px;font-size:9.5px;font-weight:900;
-  color:#ffd070;background:rgba(0,0,0,.7);padding:1px 5px;border-radius:8px;}
-.parcel.target{animation:tgP 1.1s ease infinite;}
-@keyframes tgP{0%,100%{box-shadow:0 0 0 2px rgba(255,60,0,.35);}50%{box-shadow:0 0 0 3px rgba(255,80,0,.9),0 0 22px rgba(255,60,0,.6);}}
-.parcel .pc-tg{position:absolute;top:3px;left:4px;font-size:9.5px;font-weight:900;color:#ffb090;
-  background:rgba(90,10,0,.85);padding:1px 5px;border-radius:8px;}
-#mapNote{flex:1;overflow-y:auto;padding:4px 14px 10px;font-size:11.5px;line-height:1.65;color:#b89a68;}
-#mapNote .mn-h{font-size:11px;letter-spacing:2px;color:#d8a850;margin:8px 0 4px;}
-
-/* 중: 협상 */
-#negPane{background:linear-gradient(180deg,#241605,#170e02,#241605);
-  border-right:3px solid #3d2210;}
-#negPane .pane-h{color:#c8a050;}
-#vasStrip{flex-shrink:0;display:flex;gap:8px;padding:8px 12px 6px;}
-.vcard{flex:1;display:flex;gap:9px;padding:7px 9px;border-radius:3px;cursor:pointer;transition:.18s;
-  background:linear-gradient(165deg,rgba(60,42,20,.9),rgba(30,20,8,.95));border:2px solid #5a3a14;}
-.vcard:hover{border-color:#a87830;}
-.vcard.act{border-color:#ffd060;background:linear-gradient(165deg,rgba(96,68,26,.95),rgba(44,30,10,.95));
-  box-shadow:0 0 18px rgba(255,190,60,.28);}
-.vcard.done{opacity:.55;border-color:#2a6a34;}
-.vcard.gone{opacity:.35;border-color:#7a2010;filter:grayscale(.7);}
-.vc-por{width:46px;height:58px;border-radius:2px;object-fit:cover;border:1px solid #7a5220;flex-shrink:0;}
-.vc-info{flex:1;min-width:0;}
-.vc-nm{font-size:12.5px;font-weight:900;color:#f0d49a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.vc-ti{font-size:10.5px;color:#a88a58;margin-bottom:4px;}
-.vc-bar{height:6px;border-radius:3px;background:#1a1004;overflow:hidden;border:1px solid rgba(120,80,30,.5);}
-.vc-fill{height:100%;transition:width .5s,background .5s;}
-.vc-tag{font-size:10px;margin-top:3px;color:#c8a878;}
-.vc-st{font-size:10px;margin-top:2px;font-weight:700;}
-
-#dlgZone{flex:1;overflow-y:auto;padding:8px 14px;display:flex;flex-direction:column;gap:7px;min-height:0;}
+#dlgZone{flex:1 1 0;min-height:0;overflow-y:auto;display:flex;flex-direction:column;
+  gap:5px;padding:1px 1px 0;}
 .dlg{padding:8px 12px;border-radius:3px;font-size:13px;line-height:1.68;animation:dIn .3s ease;}
 @keyframes dIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .dlg .dw{font-size:10.5px;font-weight:900;letter-spacing:1.5px;margin-bottom:3px;opacity:.85;}
@@ -311,15 +501,80 @@ button{font-family:inherit;cursor:pointer;}
 .dlg.hist{background:rgba(30,26,60,.34);border-left:3px solid #6a5ab0;color:#cfc8f0;font-size:12.5px;}
 .dlg.hist .dw{color:#9a8ae0;}
 
-#negAct{flex-shrink:0;border-top:2px solid #3d2210;background:rgba(10,6,2,.6);padding:9px 14px 11px;}
-#selLine{font-size:12.5px;color:#d8b880;min-height:36px;line-height:1.6;margin-bottom:7px;}
+#negAct{flex-shrink:0;margin-top:auto;min-height:50px;border-top:2px solid #3d2210;background:rgba(10,6,2,.72);
+  padding:6px 14px 8px;display:flex;gap:12px;align-items:center;}
+#selLine{flex:1;min-width:0;font-size:12px;color:#d8b880;min-height:0;line-height:1.5;margin:0;}
 #selLine .pill{display:inline-block;padding:2px 9px;margin:1px 3px 1px 0;border-radius:10px;
   font-size:11.5px;font-weight:700;}
 .pill.po{background:rgba(180,120,30,.3);border:1px solid #a87828;color:#ffd88a;}
 .pill.ps{background:rgba(30,110,70,.3);border:1px solid #2a8a4a;color:#8fe8b0;}
 .pill.ph{background:rgba(120,50,140,.3);border:1px solid #8a4aa0;color:#e0aaf0;}
-#negBtns{display:flex;gap:8px;}
-.nbtn{flex:1;padding:10px 0;font-size:14px;font-weight:900;letter-spacing:2px;border-radius:2px;
+#negBtns{flex:0 0 auto;display:flex;gap:8px;}
+.nbtn{flex:0 0 auto;padding:10px 16px;font-size:13.5px;font-weight:900;letter-spacing:1.5px;border-radius:2px;
+  border:2px solid #8b5a18;background:linear-gradient(180deg,#7a4a12,#452806);color:#ffd88a;transition:.18s;}
+.nbtn:hover:not(:disabled){background:linear-gradient(180deg,#a86a1a,#5a3208);
+  box-shadow:0 0 20px rgba(200,140,40,.45);}
+.nbtn:disabled{opacity:.35;cursor:not-allowed;}
+.nbtn.alt{border-color:#4a6a2a;background:linear-gradient(180deg,#3a5a1e,#1e3208);color:#c8f0a0;}
+.nbtn.alt:hover:not(:disabled){background:linear-gradient(180deg,#4e7a26,#26400c);}
+.nbtn.warn{border-color:#8a3a10;background:linear-gradient(180deg,#7a2a0a,#3a1204);color:#ffb088;}
+#musterWrap .nbtn,#battleBox .nbtn,#manorAct .nbtn{flex:0 0 auto;}
+
+/* 우: 봉사 요구 */
+.stag{margin:2px 3px 0 0;}
+
+/* 3층 · 손패 */
+#handRow{flex-shrink:0;padding:3px 12px 6px;
+  background:linear-gradient(180deg,rgba(20,13,4,.96),rgba(38,25,10,.98));
+  border-top:3px solid #5a3410;}
+#handRow .hand-h{font-size:11px;letter-spacing:1px;color:#d8a850;font-weight:700;
+  margin-bottom:1px;text-align:center;}
+#handRow #handNote{font-size:10px;color:#b89a68;text-align:center;margin-bottom:1px;line-height:1.35;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* overflow 를 한 축만 auto 로 두면 다른 축도 auto 가 되어 들린 카드가 잘린다.
+   PC 에서는 아홉 장이 다 들어가므로 visible 로 두고, 모바일에서만 가로 스크롤한다. */
+.card.burning{animation:cdBurn .3s ease forwards;}
+@keyframes cdBurn{
+  0%  {filter:drop-shadow(0 4px 7px rgba(0,0,0,.55));}
+  35% {filter:brightness(2.2) sepia(.6) drop-shadow(0 0 22px rgba(255,90,0,.95));}
+  100%{transform:translateY(34px) rotate(9deg) scale(.86);opacity:0;
+       filter:grayscale(1) brightness(.3);}
+}
+@media (prefers-reduced-motion: reduce){ .card.burning{animation:none;opacity:0;} }
+#handFan .card.target .face{animation:cdTg 1.1s ease infinite;}
+@keyframes cdTg{0%,100%{filter:drop-shadow(0 4px 7px rgba(0,0,0,.55));}
+  50%{filter:drop-shadow(0 0 16px rgba(255,70,0,.85)) drop-shadow(0 4px 7px rgba(0,0,0,.55));}}
+/* 막2에서 아직 쓰는 제목 두 줄만 남긴다 — 지도·봉신 띠·봉사 목록 규칙은
+   카드 협상으로 바뀌며 전부 죽었다. */
+.ph-t{font-size:13.5px;font-weight:900;letter-spacing:2.5px;}
+.ph-s{font-size:11.5px;opacity:.62;margin-top:1px;}
+
+#dlgZone{flex:1 1 0;min-height:0;overflow-y:auto;display:flex;flex-direction:column;
+  gap:5px;padding:1px 1px 0;}
+.dlg{padding:8px 12px;border-radius:3px;font-size:13px;line-height:1.68;animation:dIn .3s ease;}
+@keyframes dIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.dlg .dw{font-size:10.5px;font-weight:900;letter-spacing:1.5px;margin-bottom:3px;opacity:.85;}
+.dlg.me{background:linear-gradient(90deg,rgba(120,40,14,.34),rgba(70,22,6,.2));
+  border-left:3px solid #b0521a;color:#ffd8b0;}
+.dlg.me .dw{color:#e08840;}
+.dlg.them{background:linear-gradient(90deg,rgba(20,70,44,.34),rgba(10,40,24,.2));
+  border-left:3px solid #2a8a4a;color:#c4f0d2;}
+.dlg.them .dw{color:#5ac880;}
+.dlg.sys{background:rgba(90,16,4,.3);border-left:3px solid #b03010;color:#ffb098;font-size:12.5px;}
+.dlg.sys .dw{color:#ff7040;}
+.dlg.hist{background:rgba(30,26,60,.34);border-left:3px solid #6a5ab0;color:#cfc8f0;font-size:12.5px;}
+.dlg.hist .dw{color:#9a8ae0;}
+
+#negAct{flex-shrink:0;margin-top:auto;min-height:50px;border-top:2px solid #3d2210;background:rgba(10,6,2,.72);
+  padding:6px 14px 8px;display:flex;gap:12px;align-items:center;}
+#selLine{flex:1;min-width:0;font-size:12px;color:#d8b880;min-height:0;line-height:1.5;margin:0;}
+#selLine .pill{display:inline-block;padding:2px 9px;margin:1px 3px 1px 0;border-radius:10px;
+  font-size:11.5px;font-weight:700;}
+.pill.po{background:rgba(180,120,30,.3);border:1px solid #a87828;color:#ffd88a;}
+.pill.ps{background:rgba(30,110,70,.3);border:1px solid #2a8a4a;color:#8fe8b0;}
+.pill.ph{background:rgba(120,50,140,.3);border:1px solid #8a4aa0;color:#e0aaf0;}
+#negBtns{flex:0 0 auto;display:flex;gap:8px;}
+.nbtn{flex:0 0 auto;padding:10px 16px;font-size:13.5px;font-weight:900;letter-spacing:1.5px;border-radius:2px;
   border:2px solid #8b5a18;background:linear-gradient(180deg,#7a4a12,#452806);color:#ffd88a;transition:.18s;}
 .nbtn:hover:not(:disabled){background:linear-gradient(180deg,#a86a1a,#5a3208);
   box-shadow:0 0 20px rgba(200,140,40,.45);}
@@ -521,8 +776,19 @@ button{font-family:inherit;cursor:pointer;}
 .mus.rev{opacity:1;}
 .mus.came{border-color:#3a9a52;box-shadow:0 0 26px rgba(60,200,100,.4);}
 .mus.no{border-color:#a03018;box-shadow:0 0 26px rgba(200,50,20,.35);filter:grayscale(.5);}
-.mus img{width:82px;height:104px;object-fit:cover;border-radius:2px;border:2px solid #7a5220;}
-.mus-n{font-size:13px;font-weight:900;color:#f0d49a;margin-top:8px;}
+.mus{perspective:1400px;}
+.mus .card.contract{margin:0 auto;}
+#musterRow .card.contract.came{animation:ccCame .3s ease;}
+@keyframes ccCame{0%{transform:none;}
+  50%{transform:translateY(-14px) scale(1.06);filter:drop-shadow(0 0 22px rgba(255,210,110,.9));}
+  100%{transform:none;}}
+.card.contract.showback .face.front{opacity:0;}
+.card.contract.showback .face.back{transform:none;}
+/* 흐림은 앞면에만 — 뒷면의 '오지 않은 이유'는 또렷해야 한다 */
+.card.contract.torn .face.front{filter:grayscale(.8) brightness(.62);}
+/* clip-path 도 filter 와 마찬가지로 preserve-3d 를 평면화한다 — 면에 건다 */
+.card.contract.torn .face{clip-path:polygon(0 0,100% 0,100% 44%,58% 52%,100% 60%,100% 100%,0 100%,0 58%,42% 50%,0 42%);}
+.mus-n{font-size:13px;font-weight:900;color:#f0d49a;margin-top:10px;}
 .mus-r{font-size:11.5px;line-height:1.6;margin-top:6px;min-height:52px;}
 .mus.came .mus-r{color:#9fe8b4;}
 .mus.no .mus-r{color:#ff9c80;}
@@ -618,6 +884,137 @@ button{font-family:inherit;cursor:pointer;}
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-track{background:rgba(0,0,0,.25);}
 ::-webkit-scrollbar-thumb{background:rgba(140,96,40,.45);border-radius:4px;}
+/* ══════════════════════════════════════════════════════
+   모바일(세로) 레이아웃
+   기준 무대를 1280×800(가로) → 430×880(세로)로 바꾼다.
+   그래야 폰에서 배율이 0.9 안팎이 되어 버튼이 실제 44px 이상으로 찍힌다.
+   (가로 배율 0.305에서는 버튼이 14px라 손가락으로 누를 수 없었다)
+   모든 규칙은 html.mob 안에만 있으므로 가로 레이아웃은 건드리지 않는다.
+══════════════════════════════════════════════════════ */
+html.mob #stage{width:430px;height:880px;}
+
+/* ── 터치 타깃: 최소 44px ── */
+html.mob button{min-height:44px;}
+html.mob .hbtn{width:44px;height:44px;font-size:18px;min-height:44px;}
+
+/* ── 모드 전환 ── */
+#modeBar{margin-top:16px;display:flex;gap:8px;justify-content:center;align-items:center;
+  font-size:12px;color:#8a6a3e;}
+#modeBar button{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;
+  border:1px solid #6b4418;background:rgba(0,0,0,.35);color:#9c7a4c;transition:.18s;min-height:0;}
+#modeBar button.on{border-color:#ffd070;background:rgba(120,80,20,.5);color:#ffd070;}
+html.mob #modeBar{margin-top:20px;}
+html.mob #modeBar button{padding:11px 18px;font-size:14px;min-height:44px;}
+
+/* ── 타이틀 ── */
+html.mob .t-wrap{padding:0 18px;}
+html.mob .t-year{font-size:11px;letter-spacing:4px;}
+html.mob .t-main{font-size:46px;letter-spacing:1px;line-height:1.15;}
+html.mob .t-sub{font-size:15px;letter-spacing:1px;}
+html.mob .t-desc{font-size:13.5px;line-height:1.85;}
+html.mob .t-btns{flex-direction:column;gap:10px;margin-top:24px;}
+html.mob .tb{width:100%;min-height:54px;font-size:17px;}
+
+/* ── 브리핑 ── */
+html.mob .bp-box{width:auto;left:14px;right:14px;transform:none;padding:18px 16px;}
+html.mob .bp-ttl{font-size:23px;}
+html.mob .bp-tx{font-size:14px;line-height:1.8;}
+html.mob .bp-btns{flex-direction:column;gap:9px;}
+html.mob .bp-btns button{width:100%;min-height:50px;}
+
+/* ── 상단 HUD: 2줄로 접는다 ── */
+html.mob #hud{height:auto;min-height:50px;padding:6px 10px 7px;flex-wrap:wrap;gap:6px;}
+html.mob .hud-day{min-width:0;flex:1 1 auto;}
+html.mob .hd-num{font-size:24px;}
+html.mob .hd-lbl{font-size:10px;letter-spacing:2px;}
+html.mob #hudRight{flex:0 0 auto;}
+html.mob .hud-stats{order:3;flex:1 1 100%;gap:0;justify-content:space-between;font-size:12px;}
+html.mob .hs{gap:4px;font-size:12px;}
+html.mob .hs b{font-size:15px;}
+html.mob .hs .ic{font-size:14px;}
+
+/* ── 위협 띠 ── */
+html.mob #threatStrip{height:56px;}
+
+/* ── 막1 협상: 세로 협상장 ──
+   가로와 같은 구성(건너편 봉신 → 기울어진 탁자 → 행동 → 레일)을 그대로 쓰되
+   폭 430px 에 맞춘다. 조작 요소는 전부 44px 이상을 지킨다. ── */
+html.mob #act1Body{grid-template-rows:1fr auto auto;overflow:hidden;}
+
+/* 봉신 셋 — 세로에서는 초상 위에 이름을 얹어 폭을 아낀다 */
+html.mob #vasSeats{gap:5px;padding:3px 6px 0;}
+html.mob #vasSeats .seat{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;
+  gap:1px;padding:4px 4px;}
+html.mob .por-frame{width:50px;height:62px;}
+html.mob .st-body{width:100%;align-items:center;text-align:center;}
+html.mob .st-nm{font-size:10.5px;}
+html.mob .st-bar{width:82%;height:5px;}
+html.mob .st-st{font-size:9px;}
+html.mob .st-hold{display:none;}
+
+html.mob .st-pile{justify-content:center;max-height:15px;overflow:hidden;}
+html.mob #vasSeats .seat.act .st-pile{max-height:none;overflow:visible;}
+
+/* 탁자면 — 세로에서는 눕히는 각을 줄여 카드를 더 읽히게 한다.
+   폰은 세로가 모자라므로 협상장 쪽만 넘길 수 있게 두고, 손패와 행동
+   버튼은 늘 보이게 고정한다. 전부 욱여넣으면 카드가 다시 작아진다. */
+html.mob #negField{padding:2px 8px 3px;perspective:800px;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;justify-content:flex-start;}
+html.mob #offerRow{gap:12px;transform:rotateX(14deg);}
+html.mob .fz-h{font-size:9px;}
+html.mob .fslot{min-width:calc(var(--card-w) + 16px);padding:3px 5px;gap:5px;}
+/* 세로에서는 대사를 흐름에 두되, 봉신 아래·탁자 위에 온다 */
+html.mob #vasSeats{order:1;}
+html.mob #dlgZone{order:2;position:static;width:auto;max-width:none;max-height:52px;
+  flex-direction:column;margin:2px 0;}
+html.mob #offerRow{order:3;}
+html.mob .dlg{font-size:12px;padding:6px 9px;}
+
+/* 세로에서는 손패와 행동을 나란히 둘 폭이 없다 — 쌓는다 */
+html.mob #handBar{flex-direction:column;align-items:stretch;gap:6px;}
+html.mob #negAct{flex:0 0 auto;flex-direction:column;gap:5px;padding:0;}
+html.mob #negBtns{gap:8px;}
+html.mob #selLine{flex:1 1 100%;font-size:11px;max-height:28px;overflow:hidden;}
+html.mob #toggleRow{flex:1 1 100%;gap:6px;}
+html.mob #negAct #renewBox,html.mob #negAct #hereBox{flex:1;width:auto;min-height:44px;
+  max-height:46px;display:flex;align-items:center;}
+html.mob #negAct .rn-ds,html.mob #negAct .hb-ds{display:none;}
+html.mob #negAct .rn-nm,html.mob #negAct .hb-nm{font-size:11px;}
+html.mob #negBtns{flex:1 1 100%;gap:8px;}
+html.mob .nbtn{flex:1;padding:12px 0;font-size:13.5px;min-height:46px;letter-spacing:1px;}
+
+/* 아래 레일 — 가로로 넘긴다. 세로로 끌면 initCardDrag 가 카드를 집는다 */
+html.mob #handRow{padding:2px 8px 5px;}
+html.mob #railTabs{gap:5px;padding:0 0 2px;}
+html.mob .rtab{padding:8px 10px;font-size:11.5px;min-height:44px;}
+html.mob .rail-note{display:none;}
+html.mob #handFan,html.mob #demandRow{gap:3px;padding:12px 4px 0;justify-content:flex-start;
+  overflow-x:auto;overflow-y:hidden;touch-action:pan-x;-webkit-overflow-scrolling:touch;}
+html.mob #handFan .card{transform:rotate(calc(var(--d) * 1.3deg)) rotateX(4deg);}
+html.mob #demandRow .card{transform:rotateX(4deg);}
+
+
+/* ── 막2 장원 ── */
+html.mob #act2Body{display:block;grid-template-columns:none;overflow-y:auto;}
+html.mob #manorView{height:300px;}
+html.mob #manorSide{border-left:none;border-top:3px solid #5a3410;height:auto;overflow:visible;}
+html.mob #fieldRow{gap:8px;padding:10px;}
+
+/* ── 막3 소집·방어 ── */
+html.mob #musterWrap{padding:16px 14px;gap:12px;justify-content:flex-start;overflow-y:auto;}
+html.mob #musterRow{flex-direction:column;gap:10px;width:100%;}
+html.mob .mus{width:100%;padding:12px;}
+
+/* ── 신종례·모달 ── */
+html.mob .modal-box,html.mob #ritePanel,html.mob .rite-box{width:auto;left:12px;right:12px;
+  transform:none;max-width:none;}
+
+/* ── 교사용 안내 ── */
+html.mob .tp-box{width:auto;left:10px;right:10px;top:10px;bottom:10px;transform:none;
+  max-height:none;padding:18px 16px;}
+
+/* ── 에필로그 ── */
+html.mob #scEnd .ep-wrap,html.mob .ep-box{width:auto;left:14px;right:14px;transform:none;}
 </style>
 </head>
 <body>
@@ -654,7 +1051,12 @@ button{font-family:inherit;cursor:pointer;}
       협상 국면은 실시간이다. 노르만이 다가올수록 아직 나눠 주지 않은 <b style="color:#c9a165">내 땅이 하나씩 불탄다</b>.<br>
       교과서 팝업·신종례를 여는 동안에는 <b style="color:#c9a165">시계가 멈춘다</b>.
     </div>
-    <div style="margin-top:18px;font-size:11px;color:#6d5230;letter-spacing:.3px">
+    <div id="modeBar">
+      <span>화면</span>
+      <button data-act="modePc"  data-mode="pc">🖥 태블릿·PC</button>
+      <button data-act="modeMob" data-mode="mob">📱 모바일</button>
+    </div>
+    <div style="margin-top:14px;font-size:12px;color:#6d5230;letter-spacing:.3px">
       이 게임은 이름·학번을 비롯한 <b style="color:#8a6a3e">어떤 개인정보도 수집하지 않습니다</b>.
       <a href="privacy.html" style="color:#9c7a4c;text-decoration:underline">개인정보처리방침</a>
       · <a href="terms.html" style="color:#9c7a4c;text-decoration:underline">이용약관</a>
@@ -810,6 +1212,7 @@ button{font-family:inherit;cursor:pointer;}
       <span class="hs" id="hsYield"><span class="ic">🌾</span>수확력 <b>0</b></span>
     </div>
     <div id="hudRight">
+      <button class="hbtn modeToggle" data-act="toggleMode" title="모바일 화면으로">📱</button>
       <button class="hbtn" id="bgmBtn" title="배경음악">🔊</button>
       <button class="hbtn" data-act="openTeach" title="교사용 안내">📖</button>
     </div>
@@ -827,33 +1230,49 @@ button{font-family:inherit;cursor:pointer;}
     <div class="wt-marks" id="wtMarks"></div>
   </div>
   <div id="act1Body">
-    <div class="pane" id="mapPane">
-      <div class="pane-h"><div class="ph-t">내 백작령</div><div class="ph-s">봉토로 줄 구획을 고른다 · 준 땅은 그가 지킨다<span class="src" data-s="protect">📖</span></div></div>
-      <div id="mapGrid"></div>
-      <div id="mapNote"></div>
-    </div>
-    <div class="pane" id="negPane">
-      <div class="pane-h"><div class="ph-t">협상 탁자</div><div class="ph-s">주종 관계 — 봉토를 주고 봉사를 받는다<span class="src" data-s="lordvassal">📖</span></div></div>
-      <div id="vasStrip"></div>
+    <!-- 협상장 — 건너편에 봉신 셋, 앞에 기울어진 탁자면 -->
+    <div id="negField">
       <div id="dlgZone"></div>
-      <div id="negAct">
-        <div id="selLine">봉신을 고르고, 왼쪽에서 <b>봉토</b>를, 오른쪽에서 <b>봉사</b>를 선택하십시오.</div>
-        <div id="negBtns">
-          <button class="nbtn" id="btnPropose" data-act="propose" disabled>⚖ 제안한다</button>
-          <button class="nbtn alt" id="btnMuster" data-act="tryEndAct1">🎺 협상을 끝낸다</button>
+      <div id="vasSeats"></div>
+      <div id="theirHand">
+        <div class="th-h">그들이 내놓을 수 있는 봉사 — 하나를 고른다<span class="src" data-s="service">📖</span></div>
+        <div id="demandRow"></div>
+      </div>
+      <div id="offerRow">
+        <div class="fzone">
+          <div class="fz-h">봉토 — 내가 내주는 땅<span class="src" data-s="lordvassal">📖</span></div>
+          <div id="tableSlot" class="fslot"></div>
+        </div>
+        <div class="fzone narrow">
+          <div class="fz-h">봉사 — 내가 받는 것</div>
+          <div id="svcSlot" class="fslot"></div>
         </div>
       </div>
     </div>
-    <div class="pane" id="svcPane">
-      <div class="pane-h"><div class="ph-t">요구할 봉사</div><div class="ph-s">계약한 만큼만 한다<span class="src" data-s="service">📖</span></div></div>
-      <div id="svcList"></div>
-      <div id="renewBox" data-act="toggleRenew">
-        <div class="rn-nm">🔁 기존 봉토 유지</div>
-        <div class="rn-ds">새 땅을 주지 않고, <b>이미 준 봉토를 계속 쥐게</b> 하는 것만으로 값을 치른다.</div>
-      </div>
-      <div id="hereBox" data-act="toggleHered">
-        <div class="hb-nm">🕯 세습 보장 조항</div>
-        <div class="hb-ds">이 봉토를 그의 <b>아들에게 물려주도록</b> 인정한다. 상대는 크게 기뻐하지만, 그 땅은 영원히 내 손을 떠난다.</div>
+
+    <!-- 내 손패와 행동 — 세로 자리를 아끼려고 나란히 둔다 -->
+    <div id="handRow">
+      <div class="hand-h" id="handHead">내 백작령 — 봉토로 줄 구획을 고른다<span class="src" data-s="protect">📖</span>
+        <span id="handNote"></span></div>
+      <div id="handBar">
+        <div id="handFan"></div>
+        <div id="negAct">
+          <div id="selLine">봉신을 고르고, 아래 손패에서 <b>봉토</b>를, 위에서 <b>봉사</b>를 선택하십시오.</div>
+          <div id="toggleRow">
+            <div id="renewBox" data-act="toggleRenew">
+              <div class="rn-nm">🔁 기존 봉토 유지</div>
+              <div class="rn-ds">새 땅을 주지 않고, <b>이미 준 봉토를 계속 쥐게</b> 하는 것만으로 값을 치른다.</div>
+            </div>
+            <div id="hereBox" data-act="toggleHered">
+              <div class="hb-nm">🕯 세습 보장 조항</div>
+              <div class="hb-ds">그의 <b>아들에게 물려주도록</b> 인정한다. 그 땅은 영원히 내 손을 떠난다.</div>
+            </div>
+          </div>
+          <div id="negBtns">
+            <button class="nbtn" id="btnPropose" data-act="propose" disabled>⚖ 제안한다</button>
+            <button class="nbtn alt" id="btnMuster" data-act="tryEndAct1">🎺 협상을 끝낸다</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1000,9 +1419,37 @@ function paintStage(){
   const st=document.getElementById('stage');
   if(st)st.style.transform=`translate(${BASE_X+JOLT_X}px,${BASE_Y+JOLT_Y}px) scale(${SCALE})`;
 }
+/* ── 화면 모드 ──
+   pc  : 1280×800 가로 무대 (태블릿·PC)
+   mob : 430×880  세로 무대 (휴대폰)
+   폰에서 가로 무대를 쓰면 배율이 0.3까지 떨어져 버튼이 14px가 되고,
+   그래서 가로로 돌린 뒤에야 겨우 눌리는 문제가 있었다.
+   설정은 저장하지 않는다 — 이 게임은 브라우저에 아무것도 남기지 않는다. */
+const STAGE_BASE={pc:[1280,800],mob:[430,880]};
+let MODE='pc';
+function detectMode(){
+  try{
+    const coarse=matchMedia('(pointer:coarse)').matches;
+    const short=Math.min(innerWidth,innerHeight)<560;
+    return (coarse&&short)?'mob':'pc';
+  }catch(e){return 'pc';}
+}
+function setMode(m){
+  if(m!=='mob')m='pc';
+  MODE=m;
+  document.documentElement.classList.toggle('mob',m==='mob');
+  const st=el('stage');
+  if(st){st.style.width=STAGE_BASE[m][0]+'px';st.style.height=STAGE_BASE[m][1]+'px';}
+  document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
+  document.querySelectorAll('.modeToggle').forEach(b=>{b.textContent=m==='mob'?'🖥':'📱';
+    b.title=m==='mob'?'태블릿·PC 화면으로':'모바일 화면으로';});
+  fitScale();
+}
+function toggleMode(){setMode(MODE==='mob'?'pc':'mob');}
 function fitScale(){
-  const s=Math.min(innerWidth/1280,innerHeight/800);SCALE=s;
-  BASE_X=(innerWidth-1280*s)/2; BASE_Y=(innerHeight-800*s)/2;
+  const [bw,bh]=STAGE_BASE[MODE];
+  const s=Math.min(innerWidth/bw,innerHeight/bh);SCALE=s;
+  BASE_X=(innerWidth-bw*s)/2; BASE_Y=(innerHeight-bh*s)/2;
   paintStage();
 }
 addEventListener('resize',fitScale);addEventListener('orientationchange',()=>setTimeout(fitScale,150));
@@ -1425,6 +1872,11 @@ function startYear(){
   show('scAct1');SFX.horn();
   el('dlgZone').innerHTML='';
   renderMap();renderVassals();renderServices();updateHud1();
+  /* 해가 바뀌었다 — 부서진 인장이 부서지는 순간을 보여 준다.
+     "계약은 3년"이 글자가 아니라 물건으로 닳는 것을 눈으로 보게 한다. */
+  if(!reduceMotion())document.querySelectorAll('#vasSeats .cc-seal.broken').forEach((sl,i)=>{
+    sl.style.animation=`sealCrack .28s ease ${i*60}ms both`;
+  });
   // 서사
   if(G.year===0){
     dlg('hist','기록',`885년 12월. 파리는 이미 포위되었다. 당신의 백작령은 파리에서 사흘 거리다.<span class="src" data-s="norman">📖</span>`);
@@ -1610,74 +2062,236 @@ function overrun(){
    [{t:'겨울로 넘어간다',f:()=>{closeInfo();enterAct2();}}]);
 }
 
-function renderMap(){
-  const tgt=nextRaidTarget(),ri=raidIn(),soon=(ri!==null&&ri<=45);
-  el('mapGrid').innerHTML=G.parcels.map(p=>{
-    let cls='parcel';
-    if(p.t==='home')cls+=' home';
-    else if(p.burnt)cls+=' burnt';
-    else if(p.owner)cls+=' given';
-    else if(G.selP.includes(p.id))cls+=' sel';
-    if(tgt&&tgt.id===p.id&&soon)cls+=' target';
-    const owner=p.owner?G.vassals.find(v=>v.id===p.owner):null;
-    const oname=owner?(owner.n.replace('폰 ','').replace(' 부인','').replace(' 경','').replace('오도 ',''))+(p.hered?' (세습)':''):'';
-    return `<div class="${cls}" data-owner="${oname}" data-act="pickP" data-arg="${p.id}">
-      <img src="${IMG[p.img]||''}" alt="">
-      ${p.t!=='home'&&!p.owner&&!p.burnt?`<span class="pc-v">${p.val}</span>`:''}
-      ${tgt&&tgt.id===p.id&&ri!==null?`<span class="pc-tg">🔥 ${mmss(ri)}</span>`:''}
-      <span class="pc-nm">${p.n}</span>
-    </div>`;}).join('');
-  const remain=G.parcels.filter(p=>!p.owner&&!p.burnt&&p.t!=='home');
-  el('mapNote').innerHTML=`
-   <div class="mn-h">읽는 법</div>
-   우상단 숫자는 <b style="color:#ffd070">봉토 가치</b>. 봉신마다 원하는 땅이 다르다.<br>
-   <b style="color:#9fd8a8">봉토로 준 구획은 그가 지킨다</b> — 노르만이 태우지 못한다.<span class="src" data-s="protect">📖</span><br>
-   <div class="mn-h">남은 땅 ${remain.length}조각</div>
-   수확력 합계 <b style="color:#ffd070">${remain.reduce((a,p)=>a+p.yld,0)}</b> · 성채 방어 <b style="color:#ffd070">${remain.reduce((a,p)=>a+p.def,0)}</b><br>
-   봉토를 다 뿌리면 봄에 병사는 많아도 <b style="color:#ff9060">먹일 곡식이 없다</b>.`;
+/* ── 카드가 지금 어디 있는가 ──
+   새 상태가 아니라 파생값이다. 저장하지 않는다.
+   진실의 원천이 둘로 갈라지면 "지도에는 있는데 손패에는 없는 땅"이 생긴다. */
+function cardZone(p){
+  if(p.burnt)      return 'ash';         // 재 — 노르만이 태웠다
+  if(p.t==='home') return 'seat';        // 영주관 — 줄 수 없다
+  if(p.owner)      return 'v:'+p.owner;  // 그 봉신 앞
+  if(G.selP.includes(p.id)) return 'table';
+  return 'hand';
 }
-function renderVassals(){
-  el('vasStrip').innerHTML=G.vassals.map(v=>{
-    let cls='vcard';
-    if(v.gone)cls+=' gone'; else if(v.contracted)cls+=' done'; else if(v.id===G.cur)cls+=' act';
+function svcZone(s){ return s.usedBy ? 'v:'+s.usedBy : 'demand'; }
+
+/* 애니메이션 중에만 will-change 를 붙였다 뗀다 */
+function animCard(elm,ms){
+  if(!elm)return;
+  ms=ms||260;
+  elm.classList.add('anim');
+  setTimeout(function(){elm.classList.remove('anim');},ms+40);
+}
+/* ── 저부하 모드 ──
+   폰에서 프레임이 무너지면 압박감이 아니라 짜증이 된다.
+   30fps 아래로 떨어지면 부채꼴 각도와 깊이를 줄이고, 48fps 위로 돌아오면 되돌린다. */
+let LOWFX=false;
+function watchFps(){
+  let last=performance.now(),acc=0,n=0;
+  const tick=now=>{
+    const dt=now-last; last=now;
+    if(dt<200){acc+=dt;n++;}
+    if(n>=45){
+      const fps=1000/(acc/n); acc=0; n=0;
+      if(!LOWFX&&fps<30){LOWFX=true;document.documentElement.classList.add('lowfx');}
+      else if(LOWFX&&fps>48){LOWFX=false;document.documentElement.classList.remove('lowfx');}
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function reduceMotion(){
+  try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}
+}
+
+/* ── 땅 카드 한 장 ── */
+function landCardHTML(p,opts){
+  const o=opts||{};
+  const z=cardZone(p);
+  const cls=['card','land'];
+  if(z==='ash')cls.push('dead','ash');
+  if(z==='seat')cls.push('home');
+  if(z==='table')cls.push('on-table');
+  if(o.cls)cls.push(o.cls);
+  const tgt=o.target?`<span class="cv-tg">🔥 ${o.target}</span>`:'';
+  /* 재와 영주관은 누를 수 없다 — data-act 자체를 빼서 클릭 위임이 무시하게 한다 */
+  const act=(z==='ash'||z==='seat')?'':` data-act="pickP" data-arg="${p.id}"`;
+  return `<div class="${cls.join(' ')}" data-cid="${p.id}"${act} style="--d:${o.d||0};--near:${o.near||0}">
+    <div class="face front">
+      ${(z==='hand'||z==='table')?`<span class="cv-v">${p.val}</span>`:''}
+      ${tgt}
+      <div class="cv-img"><img src="${IMG[p.img]||''}" alt=""></div>
+      <div class="cv-nm">${p.n}</div>
+    </div>
+  </div>`;
+}
+/* ── 손패 (부채꼴) ──
+   영주관은 줄 수 없지만 손에 남아 있는 땅이므로 함께 보인다. */
+function renderHand(){
+  const tgt=nextRaidTarget(),ri=raidIn(),soon=(ri!==null&&ri<=45);
+  /* 고른 땅도 손패에 남긴다 — 따로 탁자에 옮기면 같은 카드를 두 번 보여 주게 되고,
+     그만큼 카드가 작아진다. 대신 제자리에서 솟아올라 빛난다. */
+  const hand=G.parcels.filter(p=>{const z=cardZone(p);return z==='hand'||z==='seat'||z==='table';});
+  const mid=(hand.length-1)/2;
+  el('handFan').innerHTML=hand.map((p,i)=>{
+    const d=Math.round((i-mid)*10)/10;
+    const near=Math.round((1-Math.abs(d)/(mid||1))*10)/10;
+    const isT=tgt&&tgt.id===p.id;
+    return landCardHTML(p,{d:d,near:near,cls:(isT&&soon)?'target':'',
+      target:(isT&&ri!==null)?mmss(ri):null});
+  }).join('');
+  const remain=G.parcels.filter(p=>!p.owner&&!p.burnt&&p.t!=='home');
+  /* 머리글은 한 줄을 넘지 않아야 카드에 가리지 않는다.
+     긴 설명은 툴팁으로 남긴다 — 지우면 가르치려던 것이 사라진다. */
+  el('handNote').innerHTML=
+    `남은 땅 <b style="color:#ffd070">${remain.length}</b>조각`
+   +` · 수확력 <b style="color:#ffd070">${remain.reduce((a,x)=>a+x.yld,0)}</b>`
+   +` · 성채 방어 <b style="color:#ffd070">${remain.reduce((a,x)=>a+x.def,0)}</b>`;
+  const hh=el('handHead');
+  if(hh)hh.title='우상단 숫자는 봉토 가치다. 봉신마다 원하는 땅이 다르다. '
+    +'봉토를 다 뿌리면 봄에 병사는 많아도 먹일 곡식이 없다.';
+}
+/* ── 탁자에 올린 땅 ── */
+/* ── 가운데 탁자 ──
+   계약이 만들어지는 자리다. 양쪽 손패에 원본이 크게 있으므로 여기에는
+   작은 사본을 놓는다 — 같은 카드를 두 번 크게 보여 주면 자리만 먹는다. */
+function renderTable(){
+  const ps=G.selP.map(id=>parcel(id)).filter(Boolean);
+  el('tableSlot').innerHTML=ps.length
+    ? ps.map(x=>landCardHTML(x,{})).join('')
+    : `<div class="slot-hint">아래 손패에서<br>봉토로 줄 땅을 올린다</div>`;
+  const sv=G.services.find(x=>x.id===G.selS);
+  el('svcSlot').innerHTML=sv
+    ? `<div class="card svc-card on-table" data-cid="${sv.id}" data-act="pickS" data-arg="${sv.id}">
+        <div class="face front">
+          <span class="sv-meta">⚔${sv.tr}</span>
+          <span class="sv-bur">부담${sv.bur}</span>
+          <div class="cv-img"><img src="${IMG[sv.img]||''}" alt=""></div>
+          <div class="cv-nm">${sv.n}</div>
+          <div class="sv-term">${TERMLBL[sv.term]}</div>
+        </div>
+      </div>`
+    : `<div class="slot-hint">위에서<br>봉사를 고른다</div>`;
+}
+/* 기존 호출부를 건드리지 않기 위해 이름을 유지한 위임 함수 */
+function renderMap(){ renderHand(); renderTable(); }
+/* ══ 계약 카드 ══
+   봉건 계약은 원래 문서다. 기한이 남은 해마다 밀랍 인장이 하나씩 부서진다.
+   "계약은 3년"이 문장이 아니라 물건이 된다. */
+function contractsOf(v){
+  return v.svcs.map(c=>({
+    svc:c,
+    land:(c.landIds||[]).map(id=>parcel(id)).filter(Boolean),
+    year:c.granted,              // sealOath 가 기록한 체결 연도
+    till:c.till,                 // 99 = 세습
+    hered:!!c.hered,
+  }));
+}
+/* 밀랍 인장 — 계약 연수만큼 찍히고, 해가 지날 때마다 하나씩 부서진다 */
+function sealHTML(c){
+  if(c.hered)return `<span class="cc-crest" title="세습 — 돌아오지 않는다">👑</span>`;
+  const total=c.svc.term||1;
+  const left=Math.max(0,Math.min(total,c.till-G.year+1));
+  let out='';
+  for(let i=0;i<total;i++)out+=`<span class="cc-seal${i<left?'':' broken'}"></span>`;
+  return out;
+}
+function tillText(c){
+  return c.hered?'대대로':(c.till>=ROUNDS.length-1?'끝까지':ROUNDS[c.till].y+'까지');
+}
+/* 막1 봉신 자리에 놓이는 압축 칩 — 자리가 좁아 카드를 그대로 놓을 수 없다.
+   전체 카드는 막3 에서 뒤집을 때 쓴다. */
+function contractChipHTML(v,c){
+  return `<span class="cc-chip${c.hered?' hered':''}" title="${c.svc.n} · ${tillText(c)}">`
+    +`⚔${c.svc.tr} · ${c.svc.n.replace('연 ','')} <span class="cc-seals">${sealHTML(c)}</span></span>`;
+}
+function contractPileHTML(v){
+  if(!v.contracted)return '';
+  return contractsOf(v).map(c=>contractChipHTML(v,c)).join('');
+}
+/* 전체 계약 카드 — 앞면에 준 땅·요구한 봉사·신종례·기한, 뒷면은 막3 전용 */
+function contractCardHTML(v,c){
+  const oath=v.oath?(OATHS.find(o=>o.id===v.oath)||{}).n||'—':'—';
+  return `<div class="card contract" data-cid="ct-${v.id}-${c.svc.id}">
+    <div class="face front">
+      <div class="cc-h">${ROUNDS[c.year]?ROUNDS[c.year].y:''}년 · 봉건 계약</div>
+      <div class="cc-nm">${v.n}</div>
+      <div class="cc-row"><b>봉토</b> ${c.land.length?c.land.map(x=>x.n).join(' · '):'없음'}</div>
+      <div class="cc-row"><b>봉사</b> ${c.svc.n} ⚔${c.svc.tr}</div>
+      <div class="cc-row"><b>신종</b> ${oath}</div>
+      <div class="cc-term"><b>기한</b> ${tillText(c)} <span class="cc-seals">${sealHTML(c)}</span></div>
+    </div>
+    <div class="face back"><div class="cc-why"></div></div>
+  </div>`;
+}
+/* 봉인 — 탁자의 땅·봉사가 하나로 묶여 봉신 앞으로 간다 */
+function sealFlyIn(v){
+  if(reduceMotion())return;
+  const seat=document.querySelector(`#vasSeats .seat.act .cc-chip:last-child`)
+          ||document.querySelector(`#vasSeats .cc-chip:last-child`);
+  if(!seat)return;
+  seat.classList.add('sealing');
+  setTimeout(()=>seat.classList.remove('sealing'),300);
+}
+function renderSeats(){
+  el('vasSeats').innerHTML=G.vassals.map(v=>{
+    const cls=['seat'];
+    if(v.gone)cls.push('gone'); else if(v.contracted)cls.push('done');
+    if(v.id===G.cur&&!v.gone)cls.push('act');
     const m=v.mood;
     const fc=m>=70?'linear-gradient(90deg,#2a9a52,#6ade8a)':m>=45?'linear-gradient(90deg,#8a8a10,#d0d040)':
              m>=22?'linear-gradient(90deg,#8a4a10,#d08030)':'linear-gradient(90deg,#8a1010,#d02020)';
     let st='',sc='';
     if(v.gone){st='✕ 떠났다';sc='#ff7050';}
-    else if(v.contracted){
-      const cl=v.svcs.map(x=>x.hered?x.n.replace('연 ','')+'(세습)'
-        :x.n.replace('연 ','')+'('+(x.till>=ROUNDS.length-1?'끝까지':ROUNDS[x.till].y+'까지')+')').join(' · ');
-      st='✓ ⚔'+vTroops(v)+' · 신의 '+v.fid;sc='#7ce09a';v._cl=cl;}
-    else if(v.gave&&v.gave.length){st='봉토는 쥐고 있으나 의무 없음';sc='#e0a860';v._cl='';}
+    else if(v.contracted){st='✓ ⚔'+vTroops(v)+' · 신의 '+v.fid;sc='#7ce09a';}
+    else if(v.gave&&v.gave.length){st='봉토는 쥐고 있으나 의무 없음';sc='#e0a860';}
     else{st=m>=70?'우호적':m>=45?'계산 중':m>=22?'불쾌':'격노';sc=m>=45?'#c8d878':'#ff9060';}
-    return `<div class="${cls}" data-act="selectV" data-arg="${v.id}">
-      <img class="vc-por" src="${IMG[v.img]||''}" alt="">
-      <div class="vc-info">
-        <div class="vc-nm">${v.n}</div><div class="vc-ti">${v.ti}</div>
-        <div class="vc-bar"><div class="vc-fill" style="width:${m}%;background:${fc}"></div></div>
-        <div class="vc-st" style="color:${sc}">${st}</div>
-        <div class="vc-tag">${v._cl?v._cl:v.tag}</div>
-      </div></div>`;}).join('');
+    const held=G.parcels.filter(x=>x.owner===v.id&&!x.burnt);
+    const detail=v.contracted?held.map(x=>x.n).join(', '):v.tag;
+    return `<div class="${cls.join(' ')}" data-act="selectV" data-arg="${v.id}">
+      <div class="por-frame"><img class="st-por" src="${IMG[v.img]||''}" alt=""></div>
+      <div class="st-body">
+        <div class="st-nm">${v.n}</div>
+        <div class="st-bar"><div class="st-fill" style="width:${m}%;background:${fc}"></div></div>
+        <div class="st-st" style="color:${sc}">${st}</div>
+        <div class="st-hold">${held.length?'쥔 땅 '+held.length+'조각 — '+detail:detail}</div>
+        <div class="st-pile">${contractPileHTML(v)}</div>
+      </div>
+    </div>`;}).join('');
 }
-function renderServices(){
+function renderVassals(){ renderSeats(); }
+/* ── 그들이 내놓는 봉사 ──
+   태그(병력·부담·기한·⚠)는 카드 위에 직접 얹는다. 카드가 커졌으므로
+   따로 설명 칸을 둘 이유가 없다. 자세한 설명은 카드의 title 로 남긴다. */
+function svcTagsHTML(s){
+  return `<span class="stag t">병력 +${s.tr}</span>`
+    +`<span class="stag b">부담 ${s.bur}</span>`
+    +`<span class="stag n" style="background:rgba(60,110,160,.30);border-color:#3a70a0;color:#9cc8f0">⌛ ${TERMLBL[s.term]}</span>`
+    +(s.pres?`<span class="stag n">위신 +${s.pres}</span>`:'')
+    +(s.days===40?'<span class="stag n" style="background:rgba(200,60,30,.28);border-color:#a04020;color:#ffa080">⚠ 3라운드째 귀가</span>':'')
+    +(s.resp?`<span class="stag n">응답 +${s.resp}</span>`:'')
+    +(s.noDist?'<span class="stag n">거리 무시</span>':'')
+    +(s.usedBy?`<span class="stag n">${SHORT[s.usedBy]} 계약</span>`:'');
+}
+function renderDemands(){
   const v=curV();
-  el('svcList').innerHTML=G.services.map(s=>{
-    const used=s.usedBy!==null;
-    return `<div class="svc${used?' used':''}${G.selS===s.id?' sel':''}" data-act="pickS" data-arg="${s.id}">
-      <img class="svc-img" src="${IMG[s.img]||''}" alt="">
-      <div class="svc-b">
-      <div class="svc-nm">${s.n}</div><div class="svc-ds">${s.d}</div>
-      <div class="svc-tags">
-        <span class="stag t">병력 +${s.tr}</span>
-        <span class="stag b">부담 ${s.bur}</span>
-        <span class="stag n" style="background:rgba(60,110,160,.30);border-color:#3a70a0;color:#9cc8f0">⌛ ${TERMLBL[s.term]}</span>
-        ${s.pres?'<span class="stag n">위신 +'+s.pres+'</span>':''}
-        ${s.days===40?'<span class="stag n" style="background:rgba(200,60,30,.28);border-color:#a04020;color:#ffa080">⚠ 3라운드째 귀가</span>':''}
-        ${s.resp?'<span class="stag n">응답 +'+s.resp+'</span>':''}
-        ${s.noDist?'<span class="stag n">거리 무시</span>':''}
-        ${used?'<span class="stag n">'+SHORT[s.usedBy]+' 계약</span>':''}
-      </div></div></div>`;}).join('');
+  el('demandRow').innerHTML=G.services.map(x=>{
+    const used=svcZone(x)!=='demand';
+    const cls=['card','svc-card'];
+    if(used)cls.push('dead');
+    if(G.selS===x.id)cls.push('picked');
+    const act=used?'':` data-act="pickS" data-arg="${x.id}"`;
+    return `<div class="${cls.join(' ')}" data-cid="${x.id}" title="${x.n} — ${x.d}"${act}>
+      <div class="face front">
+        <span class="sv-meta">⚔${x.tr}</span>
+        <span class="sv-bur">부담${x.bur}</span>
+        ${x.days===40?'<span class="sv-warn" title="3라운드째 귀가">⚠</span>':''}
+        <div class="cv-img"><img src="${IMG[x.img]||''}" alt=""></div>
+        ${used?`<span class="sv-by">${SHORT[x.usedBy]} 계약</span>`:''}
+        <div class="cv-nm">${x.n}</div>
+        <div class="sv-term">${TERMLBL[x.term]}</div>
+      </div>
+    </div>`;}).join('');
+
   const hb=el('hereBox');
   hb.classList.toggle('sel',G.selH);
   hb.style.display=(v&&!v.gone)?'block':'none';
@@ -1686,8 +2300,9 @@ function renderServices(){
   rb.classList.toggle('sel',G.selRenew);
   rb.style.display=(v&&!v.gone&&hp.length)?'block':'none';
   if(hp.length)rb.querySelector('.rn-ds').innerHTML=
-    `새 땅을 주지 않고, 이미 준 <b>${hp.map(x=>x.n).join(', ')}</b>을 계속 쥐게 하는 것만으로 값을 치른다. (값어치 <b>${renewValue(v)}</b>)`;
+    `이미 준 <b>${hp.map(x=>x.n).join(', ')}</b>을 계속 쥐게 하는 것만으로 값을 치른다. (값어치 <b>${renewValue(v)}</b>)`;
 }
+function renderServices(){ renderDemands(); }
 function updateHud1(){
   const remain=G.parcels.filter(p=>!p.owner&&!p.burnt&&p.t!=='home');
   el('hsTroop').innerHTML=`<span class="ic">⚔</span>병력 <b>${totalTroops()}</b>`;
@@ -1714,10 +2329,64 @@ function pickP(id){
   if(i>=0)G.selP.splice(i,1);else G.selP.push(id);
   renderMap();updateSel();
 }
+/* ── 카드 집기 ──
+   탭이 기본이고 드래그는 그 위에 얹는 장식이다. 드래그가 실패해도
+   탭만으로 모든 동작이 완결되어야 한다. 손패를 가로로 넘기려는 동작은
+   드래그로 채지 않고 스크롤에 양보한다 — 그러지 않으면 '터치가 안 된다'는
+   민원이 손패에서 그대로 되살아난다. */
+let DRAGST=null;
+function initCardDrag(){
+  const TH=8;                                   // 이만큼 끌면 드래그로 본다
+  const slotHit=(x,y)=>{
+    const sl=el('negField'); if(!sl)return false;
+    const r=sl.getBoundingClientRect();
+    return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;
+  };
+  addEventListener('pointerdown',e=>{
+    const c=e.target.closest('#handFan .card[data-act="pickP"]');
+    if(!c)return;
+    DRAGST={c:c,x:e.clientX,y:e.clientY,drag:false,id:c.dataset.cid};
+    c.classList.add('lift'); animCard(c);
+  },{passive:true});
+  addEventListener('pointermove',e=>{
+    const st=DRAGST; if(!st)return;
+    const dx=e.clientX-st.x, dy=e.clientY-st.y;
+    if(!st.drag){
+      /* 손패는 화면 아래, 탁자는 위다. 카드를 올리는 동작은 본질적으로 세로이므로
+         세로를 드래그로 본다. 충돌하는 것은 손패의 가로 스크롤 쪽이다. */
+      if(Math.abs(dx)>TH&&Math.abs(dx)>Math.abs(dy)){   // 가로 = 손패를 넘기려는 것
+        st.c.classList.remove('lift'); DRAGST=null; return;
+      }
+      if(Math.abs(dy)>TH)st.drag=true;
+    }
+    if(st.drag){
+      st.c.style.transform=`translate(${dx}px,${dy}px) translateZ(70px) rotateX(-6deg)`;
+      el('negField').classList.toggle('over',slotHit(e.clientX,e.clientY));
+    }
+  },{passive:true});
+  const finish=e=>{
+    const st=DRAGST; if(!st)return;
+    DRAGST=null;
+    st.c.classList.remove('lift'); st.c.style.transform='';
+    const sl=el('negField'); if(sl)sl.classList.remove('over');
+    if(!st.drag)return;                          // 탭이면 클릭 위임이 처리한다
+    /* 드래그 뒤에는 click 이 한 번 더 뜬다. 그대로 두면 pickP 가 두 번 불려
+       카드가 올라갔다 바로 내려온다. */
+    window.__justDragged=true;
+    setTimeout(()=>{window.__justDragged=false;},0);
+    if(slotHit(e.clientX,e.clientY)&&!G.selP.includes(st.id))pickP(st.id);
+  };
+  addEventListener('pointerup',finish);
+  addEventListener('pointercancel',()=>{
+    const st=DRAGST; if(!st)return;
+    DRAGST=null; st.c.classList.remove('lift'); st.c.style.transform='';
+    const sl=el('negField'); if(sl)sl.classList.remove('over');
+  });
+}
 function pickS(id){
   const s=G.services.find(x=>x.id===id),v=curV();
   if(s.usedBy!==null||!v||v.gone)return;
-  SFX.pick();G.selS=G.selS===id?null:id;renderServices();updateSel();
+  SFX.pick();G.selS=G.selS===id?null:id;renderServices();renderTable();updateSel();
 }
 function toggleRenew(){
   const v=curV();if(!v||v.gone)return;
@@ -1749,8 +2418,10 @@ function dlg(who,name,txt){
   const z=el('dlgZone'),d=document.createElement('div');
   d.className='dlg '+who;
   d.innerHTML=`<div class="dw">${name}</div>${txt}`;
-  z.appendChild(d);z.scrollTop=z.scrollHeight;
-  while(z.children.length>26)z.removeChild(z.firstChild);
+  z.appendChild(d);
+  /* 스크롤 상자로 두면 위쪽 줄이 잘려 보인다. 마지막 두 줄만 남긴다 —
+     지난 기록은 G.log 가 따로 들고 있고 결과 화면에서 쓴다. */
+  while(z.children.length>2)z.removeChild(z.firstChild);
 }
 function heldParcels(v){return G.parcels.filter(p=>p.owner===v.id&&!p.burnt);}
 function renewValue(v){
@@ -1812,15 +2483,30 @@ function checkAllUsed(){
   },700);
   return true;
 }
+/* ── 카드 한 장이 타서 재가 되어 떨어진다 ──
+   지도 칸이 어두워지는 것보다, 쥐고 있던 카드가 사라지는 편이 아프다.
+   0.3초를 넘기지 않는다 — 협상은 실시간이고, 연출이 시계를 잡아먹으면 안 된다. */
+function burnCard(id,cb){
+  /* 탁자에 올려 둔 카드가 탈 수도 있다. 손패만 보면 그 경우를 놓쳐,
+     불탄 땅이 선택에 남아 그대로 제안된다. */
+  const c=document.querySelector(`#handFan .card[data-cid="${id}"]`);
+  if(c)c.removeAttribute('data-act');          // 타는 도중에 집지 못하게
+  if(G.selP.includes(id))G.selP=G.selP.filter(x=>x!==id);
+  if(!c||reduceMotion()){ if(cb)cb(); return; }
+  animCard(c,300);
+  c.classList.add('burning');
+  setTimeout(()=>{ if(cb)cb(); },300);
+}
 function doRaid(){
   const t=nextRaidTarget();
   if(!t)return;
-  t.burnt=true;SFX.fire();shake(6,420,-0.5,0.25);flash('hit');
+  SFX.fire();shake(6,420,-0.5,0.25);flash('hit');
   dlg('sys','약탈',`🔥 노르만 약탈대가 <b>${J(t.n,'을','를')}</b> 불태웠다. 이제 그 땅은 누구에게도 줄 수 없다.`);
   const keep=el('vig').style.boxShadow;
   el('vig').style.boxShadow='inset 0 0 90px rgba(220,60,0,.55)';
   setTimeout(()=>{el('vig').style.boxShadow=keep;},900);
-  renderMap();updateHud1();
+  /* 카드를 먼저 태우고, 다 탄 뒤에 데이터를 바꿔 다시 그린다 */
+  burnCard(t.id,()=>{ t.burnt=true; renderMap(); updateSel(); updateHud1(); });
 }
 function accept(v,ps,s,kind,score){
   const lines={glad:['"훌륭합니다. 이 정도라면 기꺼이 검을 들겠습니다."','"주군의 관대함을 잊지 않겠습니다."','"제 기사들이 오늘 밤 술을 마시겠군요. 좋습니다."'],
@@ -2071,7 +2757,8 @@ function sealOath(){
 
   // ── 조항 등록 (기한 포함) ──
   const term=p.hered?99:(p.s.term||1);
-  const clause={...p.s, hered:!!p.hered, till:p.hered?99:(G.year+term-1), granted:G.year};
+  const clause={...p.s, hered:!!p.hered, till:p.hered?99:(G.year+term-1), granted:G.year,
+                landIds:p.ps.map(x=>x.id)};
   if(iv&&iv.id==='vexillum')clause.tr+=1;                 // 군기 — 병력 +1
   v.svcs.push(clause);
   v.contracted=true;
@@ -2132,7 +2819,8 @@ function sealOath(){
   const nx=G.vassals.find(x=>!x.contracted&&!x.gone);
   if(nx){G.cur=nx.id;setTimeout(()=>{dlg('them',nx.n,nx.intro);},500);}
   renderVassals();renderMap();renderServices();updateHud1();paintThreat();
-  const el2=el('vasStrip');if(el2)floater(el2,'계약 성립','#7ce09a');
+  sealFlyIn(v);
+  const el2=el('vasSeats');if(el2)floater(el2,'계약 성립','#7ce09a');
   if(checkAllUsed())return;
 }
 function tryEndAct1(forced){
@@ -2342,8 +3030,8 @@ function enterAct3(){
   el('hsWall').innerHTML=`<span class="ic">🏰</span>성채 <b>${G.wall}</b>`;
   const cs=G.vassals.filter(v=>v.contracted);
   el('musterRow').innerHTML=cs.length?cs.map(v=>`
-    <div class="mus" id="mus-${v.id}">
-      <img src="${IMG[v.img]||''}" alt="">
+    <div class="mus cardZone" id="mus-${v.id}">
+      ${contractsOf(v).map(c=>contractCardHTML(v,c)).join('')}
       <div class="mus-n">${v.n}</div>
       <div class="mus-r" id="musr-${v.id}">…</div>
       <div class="mus-t" id="must-${v.id}"></div>
@@ -2383,9 +3071,34 @@ function respondChance(v){
   if(v.noShow)c-=6*v.noShow;
   return clamp(c,5,92);
 }
+/* ── 뒤집기 ──
+   겨우내 봉신 앞에 놓여 있던 계약 카드를 소집 나팔에 한 장씩 뒤집는다.
+   앞면이면 왔다. 뒷면이면 오지 않았고, 뒷면에 그 이유가 적힌 뒤 찢어진다.
+   판정은 손대지 않는다 — 이 함수는 결과를 받아 보여 주기만 한다. */
+function flipContract(v,came,why){
+  const box=el('mus-'+v.id);
+  const cards=box?[...box.querySelectorAll('.card.contract')]:[];
+  if(!cards.length)return;
+  cards.forEach((card,i)=>{
+    const back=card.querySelector('.cc-why');
+    if(back)back.innerHTML=why||'';
+    if(came){ card.classList.add('came'); return; }
+    if(reduceMotion()){
+      card.classList.add('showback');
+      setTimeout(()=>card.classList.add('torn'),160);
+    }else{
+      animCard(card,300);
+      setTimeout(()=>{
+        card.classList.add('flip');
+        setTimeout(()=>card.classList.add('torn'),300);
+      },i*90);
+    }
+  });
+}
 function revealVassal(v){
   const box=el('mus-'+v.id);if(!box)return;
   box.classList.add('rev');
+  let why='';
   const ch=respondChance(v);
   const roll=Math.random()*100;
   v.came=roll<ch;
@@ -2397,7 +3110,6 @@ function revealVassal(v){
     G.log.push(ROUNDS[G.year].y+' '+v.n+' 출전');
   }else{
     box.classList.add('no');SFX.bad();
-    let why;
     if(v.oath==='o3')why='그는 <b>조건부로만</b> 신종했다. 다른 주군의 소집이 먼저였다.';
     else if(v.mood<40)why='마지막까지 그는 이 계약이 불공정하다고 여겼다.';
     else if(!vNoDist(v)&&v.dist>=10)why='길이 멀다. 사자는 아직 그의 성에 닿지도 못했다.';
@@ -2408,6 +3120,7 @@ function revealVassal(v){
     v.noShow=(v.noShow||0)+1;
     G.log.push(ROUNDS[G.year].y+' '+v.n+' 불참');
   }
+  flipContract(v,v.came,v.came?'':why);
   let f=3;G.vassals.forEach(x=>{if(x.contracted&&x.came)f+=vTroops(x);});
   G.force=f;
   el('hsForce').innerHTML=`<span class="ic">⚔</span>실제 병력 <b>${f}</b>`;
@@ -2744,8 +3457,12 @@ const ACTIONS={
   riteSeal:()=>riteSeal(),
   cycleField:a=>cycleField(Number(a)),
   aftermath:()=>aftermath(),
+  modePc:()=>setMode('pc'),
+  modeMob:()=>setMode('mob'),
+  toggleMode:()=>toggleMode(),
 };
 document.addEventListener('click',e=>{
+  if(window.__justDragged)return;      // 드래그로 이미 처리했다
   const t=e.target.closest('[data-act]');
   if(!t)return;
   const fn=ACTIONS[t.dataset.act];
@@ -2757,7 +3474,8 @@ resetG();
 el('titleArt').style.backgroundImage=`url(${IMG.cin_fleet||''})`;
 document.documentElement.style.setProperty('--mapbg',`url(${IMG.map_county||''})`);
 document.documentElement.style.setProperty('--parch',`url(${IMG.bg_parchment||''})`);
-fitScale();setTimeout(fitScale,80);
+initCardDrag();watchFps();
+setMode(detectMode());setTimeout(fitScale,80);
 </script>
 </body>
 </html>
