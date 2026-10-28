@@ -764,11 +764,15 @@ html.lowfx .card .face{filter:none;box-shadow:0 3px 6px rgba(0,0,0,.5);}
 #manorAct{flex-shrink:0;padding:0 14px 14px;}
 
 /* ═══ 막3 소집 ═══ */
-#act3Body{flex:1;position:relative;background-size:cover;background-position:center;}
+#act3Body{flex:1;min-height:0;position:relative;background-size:cover;background-position:center;}
 #act3Body::after{content:'';position:absolute;inset:0;
   background:linear-gradient(180deg,rgba(8,4,12,.5),rgba(8,4,12,.86));}
 #musterWrap{position:relative;z-index:3;height:100%;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:16px;padding:24px 60px;}
+  align-items:center;justify-content:flex-start;gap:16px;padding:24px 60px;overflow-y:auto;}
+/* 가운데 정렬은 위아래 여백 요소로 한다 — justify-content:center 는 내용이 넘치면
+   위·아래로 똑같이 잘려 스크롤로도 닿지 않는다. 계약 카드가 쌓이고 결과 문장이 길어지면
+   「여파를 본다」 버튼이 무대 밖으로 밀려나 게임이 멈췄다(2026-10 수업 제보). */
+#musterWrap::before,#musterWrap::after{content:'';margin:auto 0;}
 #musterRow{display:flex;gap:16px;}
 .mus{width:210px;padding:14px;border-radius:3px;text-align:center;
   background:linear-gradient(165deg,rgba(40,28,12,.92),rgba(18,12,4,.96));border:2px solid #5a3a14;
@@ -1002,6 +1006,7 @@ html.mob #fieldRow{gap:8px;padding:10px;}
 
 /* ── 막3 소집·방어 ── */
 html.mob #musterWrap{padding:16px 14px;gap:12px;justify-content:flex-start;overflow-y:auto;}
+html.mob #musterWrap::before,html.mob #musterWrap::after{display:none;}
 html.mob #musterRow{flex-direction:column;gap:10px;width:100%;}
 html.mob .mus{width:100%;padding:12px;}
 
@@ -3041,6 +3046,7 @@ function enterAct3(){
   el('btnM3').innerHTML='🎺 나팔을 분다';
   el('btnM3').classList.remove('hidden');
   el('battleBox').classList.add('hidden');
+  el('musterWrap').scrollTop=0;
 }
 function musterNext(){
   const cs=G.vassals.filter(v=>v.contracted);
@@ -3051,11 +3057,13 @@ function musterNext(){
     if(!cs.length){runBattle();return;}
     revealVassal(cs[0]);m3step=1;
     el('btnM3').innerHTML=(cs.length===1)?'⚔ 성벽으로':'▼ 다음';
+    keepInView('btnM3');
     return;
   }
   if(m3step<cs.length){
     revealVassal(cs[m3step]);m3step++;
     if(m3step>=cs.length)el('btnM3').innerHTML='⚔ 성벽으로';
+    keepInView('btnM3');
     return;
   }
   runBattle();
@@ -3190,6 +3198,14 @@ function runBattle(){
       },660);
     }
   },500+i*1900));
+  setTimeout(()=>keepInView('btnAfter'),500+rows.length*1900);
+}
+/* 막3 단추가 소집 화면 아래로 밀려났으면 그만큼 내려 준다.
+   scrollIntoView 는 overflow:hidden 인 body 까지 굴려 무대를 어긋나게 하므로 쓰지 않는다. */
+function keepInView(id){
+  const w=el('musterWrap'),b=el(id); if(!w||!b||b.classList.contains('hidden'))return;
+  const over=b.getBoundingClientRect().bottom-w.getBoundingClientRect().bottom;
+  if(over>0)w.scrollBy({top:over/(SCALE||1)+24,behavior:'smooth'});
 }
 
 /* 여파: 그 해를 정산하고 다음 해로 넘긴다 */
