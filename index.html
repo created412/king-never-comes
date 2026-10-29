@@ -373,6 +373,37 @@ html.lowfx .card .face{filter:none;box-shadow:0 3px 6px rgba(0,0,0,.5);}
 .st-fill{height:100%;transition:width .5s,background .5s;}
 .st-st{font-size:11px;font-weight:700;}
 .st-pile{display:flex;gap:3px;flex-wrap:wrap;min-height:0;}
+/* 계약 칩·밀랍 인장·계약 카드 — 9890ece 에서 막1을 다시 짜며 함께 지워져
+   소집 화면의 계약 카드가 빈 테두리로 나왔다. 그대로 되살린다. */
+.cc-chip{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;
+  color:#f0e0c0;background:linear-gradient(165deg,rgba(200,180,130,.22),rgba(120,96,50,.28));
+  border:1px solid rgba(190,160,90,.55);border-radius:2px;padding:1px 4px;line-height:1.3;}
+.cc-chip.hered{border-color:#b07ad0;color:#e8c0ff;background:rgba(90,40,110,.3);}
+.cc-chip.sealing{animation:ccSeal .3s cubic-bezier(.2,.9,.25,1);}
+@keyframes ccSeal{0%{transform:translateY(-22px) scale(1.5);opacity:0;}
+  60%{opacity:1;}100%{transform:none;opacity:1;}}
+.cc-seals{display:inline-flex;gap:2px;align-items:center;}
+.cc-seal{width:7px;height:7px;border-radius:50%;display:inline-block;
+  background:radial-gradient(circle at 35% 30%,#d84828,#7a1808);
+  box-shadow:0 1px 2px rgba(0,0,0,.5);}
+.cc-seal.broken{background:#6a5a48;opacity:.5;box-shadow:none;
+  clip-path:polygon(0 0,100% 0,100% 38%,62% 52%,100% 66%,100% 100%,0 100%,0 62%,38% 50%,0 38%);}
+.cc-crest{font-size:10px;}
+@keyframes sealCrack{0%{transform:scale(1.7);filter:brightness(2.2);}100%{transform:none;filter:none;}}
+
+/* 전체 계약 카드 — 막3 에서 뒤집는다 */
+.card.contract{--card-w:124px;--card-h:158px;}
+.card.contract .face.front{background:linear-gradient(170deg,#e8d7ae,#c9b183);
+  border-color:#8a6a2a;padding:5px 6px;gap:1px;color:#3a2a10;}
+.card.contract .cc-h{font-size:8.5px;letter-spacing:.5px;color:#7a5a20;font-weight:900;}
+.card.contract .cc-nm{font-size:11px;font-weight:900;color:#2a1c08;line-height:1.2;
+  border-bottom:1px solid rgba(120,90,30,.5);padding-bottom:2px;margin-bottom:2px;}
+.card.contract .cc-row{font-size:8.5px;line-height:1.35;}
+.card.contract .cc-row b{color:#6a4a14;}
+.card.contract .cc-term{margin-top:auto;font-size:8.5px;display:flex;align-items:center;gap:4px;
+  border-top:1px solid rgba(120,90,30,.5);padding-top:2px;}
+.card.contract .face.back{padding:9px;justify-content:center;color:#e8c9a0;}
+.card.contract .cc-why{font-size:9.5px;line-height:1.45;text-align:center;}
 
 /* ── 그들이 들고 있는 패 ──
    봉사는 내 것이 아니라 그들이 내놓는 것이다. 그래서 탁자 건너편,
@@ -1779,7 +1810,7 @@ function renderP0(){
   el('p0Art').style.backgroundImage=`url(${IMG[s.img]||''})`;
   el('p0Date').textContent=s.date;
   el('p0Txt').innerHTML=s.t;
-  if(p0i<P0.length-1){el('p0Next').classList.remove('hidden');el('doorRow').classList.add('hidden');}
+  if(p0i<P0.length-1){el('p0Next').classList.remove('hidden');el('doorRow').classList.add('hidden');p0Cap(0);}
   else{el('p0Next').classList.add('hidden');renderDoors();}
 }
 el('scAct0').addEventListener('click',e=>{
@@ -1804,7 +1835,10 @@ function renderDoors(){
     <div class="door-b">지체 없이 협상 탁자를 차린다. 하루도 버리지 않는다.</div>
     <div class="door-c" id="dcKnight">시간을 하나도 잃지 않는다</div>
   </div>`;
+  // 자막과 선택지가 둘 다 화면 아래에 붙어 있어 겹친다 — 자막을 선택지 위로 올린다
+  p0Cap(d.offsetHeight);
 }
+function p0Cap(lift){el('scAct0').querySelector('.cine-cap').style.bottom=lift?lift+'px':'';}
 function door(k){
   SFX.click();
   let txt='',img='cin_king';
@@ -1832,7 +1866,7 @@ function door(k){
     <b style="color:#ffd070">당신에게는 아직 아홉 조각의 땅이 있다.</b>`;
     G.log.push('지체 없이 협상을 시작했다');
   }
-  el('doorRow').classList.add('hidden');
+  el('doorRow').classList.add('hidden');p0Cap(0);
   el('p0Art').style.backgroundImage=`url(${IMG[img]||''})`;
   el('p0Date').textContent='885년 12월 · 결정';
   el('p0Txt').innerHTML=txt;
@@ -1945,8 +1979,13 @@ function forfeit(v){
   v.svcs.forEach(sv=>{const orig=G.services.find(x=>x.id===sv.id);if(orig&&orig.usedBy===v.id)orig.usedBy=null;});
   v.svcs=[];v.contracted=false;v.gave=[];
   if(back.length)dlg('sys','몰수',`⚖ 신종을 저버린 자의 봉토는 주군에게 돌아온다 — <b>${back.join(', ')}</b> 회수.<span class="src" data-s="felony">📖</span>`);
-  if(kept.length)dlg('sys','몰수',`그러나 <b>${kept.join(', ')}</b>은(는) 이미 <b>세습</b>으로 넘긴 땅이다. 돌아오지 않는다.`);
+  if(kept.length)dlg('sys','몰수',`그러나 <b>${kept.join(', ')}</b>${Jp(kept.join(', '),'은','는')} 이미 <b>세습</b>으로 넘긴 땅이다. 돌아오지 않는다.`);
   return {back,kept};
+}
+/* 성채 방어 = 아직 내 손에 있는 땅(영주관 포함)의 방어 + 전리품 보수.
+   협상 화면도 이 값을 보여 준다 — 영주관을 빼면 봄에 갑자기 2가 늘어 보였다. */
+function wallDef(){
+  return G.parcels.filter(p=>!p.owner&&!p.burnt).reduce((a,p)=>a+p.def,0)+(G.wallBonus||0);
 }
 function nextRaidTarget(){
   for(const id of RAID_ORDER){const p=parcel(id);if(!p.owner&&!p.burnt)return p;}
@@ -2057,6 +2096,14 @@ function paintThreat(force){
   if(t&&ri!==null)el('thMsg').innerHTML=`다음 약탈 목표 <b>${t.n}</b> — <b>${mmss(ri)}</b> 뒤 불탄다 · 봉토로 주면 그 봉신이 지킨다`;
   else if(t)el('thMsg').innerHTML=`약탈대는 더 이상 돌지 않는다 — 이제 <b>본대가 성벽으로 온다</b>`;
   else el('thMsg').innerHTML=`남은 구획이 모두 지켜지고 있다`;
+  /* 손패는 누를 때만 다시 그려지므로, 표적 카드의 초읽기는 여기서 매초 맞춘다.
+     안 그러면 배너는 00:07인데 카드는 00:21에 멈춰 있다. */
+  const tc=t&&document.querySelector(`#handFan .card[data-cid="${t.id}"]`);
+  if(tc){
+    tc.classList.toggle('target',ri!==null&&ri<=45);
+    const tg=tc.querySelector('.cv-tg');
+    if(tg&&ri!==null)tg.textContent='🔥 '+mmss(ri);
+  }
   el('thPause').textContent=clockPaused()?'⏸ 정지':'';
 }
 function overrun(){
@@ -2150,7 +2197,7 @@ function renderHand(){
   el('handNote').innerHTML=
     `남은 땅 <b style="color:#ffd070">${remain.length}</b>조각`
    +` · 수확력 <b style="color:#ffd070">${remain.reduce((a,x)=>a+x.yld,0)}</b>`
-   +` · 성채 방어 <b style="color:#ffd070">${remain.reduce((a,x)=>a+x.def,0)}</b>`;
+   +` · 성채 방어 <b style="color:#ffd070">${wallDef()}</b>`;
   const hh=el('handHead');
   if(hh)hh.title='우상단 숫자는 봉토 가치다. 봉신마다 원하는 땅이 다르다. '
     +'봉토를 다 뿌리면 봄에 병사는 많아도 먹일 곡식이 없다.';
@@ -2305,7 +2352,7 @@ function renderDemands(){
   rb.classList.toggle('sel',G.selRenew);
   rb.style.display=(v&&!v.gone&&hp.length)?'block':'none';
   if(hp.length)rb.querySelector('.rn-ds').innerHTML=
-    `이미 준 <b>${hp.map(x=>x.n).join(', ')}</b>을 계속 쥐게 하는 것만으로 값을 치른다. (값어치 <b>${renewValue(v)}</b>)`;
+    `이미 준 <b>${hp.map(x=>x.n).join(', ')}</b>${Jp(hp.map(x=>x.n).join(', '),'을','를')} 계속 쥐게 하는 것만으로 값을 치른다. (값어치 <b>${renewValue(v)}</b>)`;
 }
 function renderServices(){ renderDemands(); }
 function updateHud1(){
@@ -2878,6 +2925,7 @@ function enterAct2(){
   if(G.year===0){G.serfs=8+(vill.owner||vill.burnt?0:12);G.anger=12;}
   else if(!vill.owner&&!vill.burnt)G.serfs=Math.min(20,G.serfs+1);
   G.grain=Math.round((G.grain||0)*0.35*10)/10;
+  G.harvestY=0;
   el('manorView').style.backgroundImage=`url(${IMG.manor_three_field||''})`;
   el('manorView').classList.add('snow');
   el('btnMonth').innerHTML='🎺 봄을 맞는다 — 소집으로';
@@ -2977,7 +3025,9 @@ function runMonth(){
   const e=G.curEvt;
   SFX.click();
   G.anger=clamp(G.anger+estAnger(),0,100);
-  G.grain=Math.round((G.grain+estGrain())*10)/10;
+  const got=estGrain();
+  G.grain=Math.round((G.grain+got)*10)/10;
+  G.harvestY=Math.round(((G.harvestY||0)+got)*10)/10;
   if(G.anger<30)G.serfs=Math.min(20,G.serfs+1);      // 살 만하면 사람이 는다
   // 지력 갱신
   G.fields.forEach(f=>{f.fert=clamp(f.fert+CROPS[f.crop].fert,0,100);});
@@ -3029,7 +3079,7 @@ function enterAct3(){
   G.act=3;show('scAct3');m3step=0;G.battleDone=false;
   el('hYear3').textContent=ROUNDS[G.year].y;
   el('act3Body').style.backgroundImage=`url(${IMG.cin_summons||''})`;
-  G.wall=G.parcels.filter(p=>!p.owner&&!p.burnt).reduce((a,p)=>a+p.def,0)+(G.wallBonus||0);
+  G.wall=wallDef();
   el('hsGrain3').innerHTML=`<span class="ic">🌾</span>군량 <b>${G.grain}</b>`;
   el('hsForce').innerHTML=`<span class="ic">⚔</span>실제 병력 <b>3</b>`;
   el('hsWall').innerHTML=`<span class="ic">🏰</span>성채 <b>${G.wall}</b>`;
@@ -3147,6 +3197,7 @@ function runBattle(){
   const cav=cavalry();
   let force=3+came.reduce((a,v)=>a+vTroops(v),0)+cav;
   G.forceStart=force;G.cav=cav;
+  G.grainStart=G.grain;
   let grain=G.grain,held=0;
   const rows=[];
   for(let r=1;r<=2;r++){
@@ -3215,7 +3266,7 @@ function aftermath(){
   const held=G.rounds.filter(r=>r.win).length;
   const came=G.vassals.filter(v=>v.contracted&&v.came).length;
   const cs=G.vassals.filter(v=>v.contracted).length;
-  G.hist.push({y:R.y,held,came,cs,force:G.forceStart,grain:G.grainLeft});
+  G.hist.push({y:R.y,held,came,cs,force:G.forceStart,grain:G.grainLeft,harvest:G.harvestY||0,stock:G.grainStart});
   let body='',extra='';
   if(held===2){
     G.prestige+=2;
@@ -3226,7 +3277,7 @@ function aftermath(){
       전리품으로 <b>성벽을 보수했다</b> — 성채 방어 <b>+1</b> (누적 ${G.wallBonus})`;
   }else if(held===1){
     G.prestige=Math.max(0,G.prestige-1);
-    const lost=nextRaidTarget(); if(lost){lost.burnt=true;extra=`<br><b style="color:#a03010">${lost.n}</b>이(가) 불탔다.`;}
+    const lost=nextRaidTarget(); if(lost){lost.burnt=true;extra=`<br><b style="color:#a03010">${lost.n}</b>${Jp(lost.n,'이','가')} 불탔다.`;}
     G.vassals.forEach(v=>{if(v.came){v.mood=clamp(v.mood-4,0,100);v.served=(v.served||0)+1;}});
     body=`첫 파는 막았으나 두 번째에 뚫렸다. 바깥 마을이 약탈당했다.<br>위신 <b>−1</b>${extra}`;
   }else{
@@ -3241,7 +3292,7 @@ function aftermath(){
   }
   const gone=G.vassals.filter(v=>v.mood<=0&&!v.gone);
   gone.forEach(v=>{v.gone=true;forfeit(v);});
-  if(gone.length)body+=`<br><br><b style="color:#a03010">${gone.map(v=>v.n).join(', ')}가 신종을 파기하고 떠났다.</b>`;
+  if(gone.length)body+=`<br><br><b style="color:#a03010">${J(gone.map(v=>v.n).join(', '),'이','가')} 신종을 파기하고 떠났다.</b>`;
   if(G.year>=ROUNDS.length-1){ enterEnd(); return; }
   info(`${R.y}년의 결말`,
     `${body}<br><br><span style="color:#5a2f08">${R.after}</span>`,
@@ -3263,8 +3314,14 @@ function enterEnd(){
   // 4지표
   const sDef=clamp(Math.round(totalHeld/(ROUNDS.length*2)*100),0,100);
   const gl=(G.grainLeft!==undefined?G.grainLeft:G.grain);
-  const sEco=clamp(Math.round(Math.min(G.grain,18)/18*70+Math.min(gl,6)/6*30),0,100);
-  const sVas=contracted.length?clamp(Math.round(came.length/contracted.length*100),0,100):0;
+  const lastH=G.hist[G.hist.length-1]||{};
+  const stock=lastH.stock!==undefined?lastH.stock:G.grain;
+  const sEco=clamp(Math.round(Math.min(stock,18)/18*70+Math.min(gl,6)/6*30),0,100);
+  /* 다섯 해 전체의 출전율에서, 신종을 깨고 떠난 봉신마다 깎는다.
+     마지막 해만 세면 떠난 자는 계약 명단에서 빠져 있어 100이 나온다. */
+  const csAll=G.hist.reduce((a,h)=>a+h.cs,0), cameAll=G.hist.reduce((a,h)=>a+h.came,0);
+  const left=G.vassals.filter(v=>v.gone).length;
+  const sVas=csAll?clamp(Math.round(cameAll/csAll*100)-left*15,0,100):0;
   const sSerf=clamp(Math.round((G.serfs/20*60)+(100-G.anger)*0.4),0,100);
   // 주군의 권한 — 세습으로 넘긴 땅과 전권 위임(장갑)만큼 회수 불가능해진다
   const sLord=clamp(100-heredCount*18-(G.quasi||0)*8-(8-G.prestige)*4,0,100);
@@ -3272,8 +3329,10 @@ function enterEnd(){
   let grade,gcol,gtitle,hero;
   const lastHeld=(G.hist[G.hist.length-1]||{}).held||0;
   G.defended=lastHeld>=1;
-  const weakest=Math.min(sDef,sEco,sVas,sSerf,sLord);
-  if(totalHeld>=9&&avg>=70&&weakest>=35){grade='A';gcol='#7ce09a';gtitle='다섯 번의 봄을 지켰다';hero='end_hold';}
+  const COLLAPSE=35;   // 이 아래면 「파탄」 — 칸 표시와 결론 문장, A 등급 조건이 함께 쓴다
+  const scores=[sDef,sEco,sVas,sSerf,sLord];
+  const weakest=Math.min(...scores), broken=scores.filter(v=>v<COLLAPSE).length;
+  if(totalHeld>=9&&avg>=70&&weakest>=COLLAPSE){grade='A';gcol='#7ce09a';gtitle='다섯 번의 봄을 지켰다';hero='end_hold';}
   else if(totalHeld>=7){grade='B';gcol='#e0c060';gtitle='영지는 남았다';hero='end_hold';}
   else if(totalHeld>=4){grade='C';gcol='#e08840';gtitle='절반만 지켰다';hero='cin_siege';}
   else{grade='D';gcol='#ff7050';gtitle='백작령은 사라졌다';hero='cin_fleet';}
@@ -3288,8 +3347,8 @@ function enterEnd(){
   el('endScores').innerHTML=`<div class="scoreRow">
     ${[['방어',sDef],['재정·군량',sEco],['봉신의 충성',sVas],['농노',sSerf],['주군의 권한',sLord]].map(([l,v])=>
       `<div class="sc"><div class="sc-l">${l}</div>
-       <div class="sc-v" style="color:${v>=70?'#2a7a3a':v>=45?'#9a7010':'#a03010'}">${v}</div>
-       <div class="sc-d">${v>=70?'견고':v>=45?'불안':'파탄'}</div></div>`).join('')}
+       <div class="sc-v" style="color:${v>=70?'#2a7a3a':v>=COLLAPSE?'#9a7010':'#a03010'}">${v}</div>
+       <div class="sc-d">${v>=70?'견고':v>=COLLAPSE?'불안':'파탄'}</div></div>`).join('')}
     </div>`;
 
   let vd=`<div style="margin-bottom:12px;padding:10px 14px;background:rgba(255,248,228,.55);border-left:4px solid #8a5010;border-radius:2px">`
@@ -3298,11 +3357,12 @@ function enterEnd(){
   vd+=`열 번의 파상 공격 중 <b>${totalHeld}번</b>을 막았다. `;
   vd+=contracted.length?`마지막 해에 계약한 봉신 <b>${contracted.length}명</b> 중 <b>${came.length}명</b>이 왔다. `:`마지막 해에 당신 곁에는 아무도 없었다. `;
   if(came.length<contracted.length)vd+=`오지 않은 자들이 배신자인 것은 아니다. <b>봉건 계약은 무제한 복종이 아니었다.</b> `;
-  vd+=`<br><br>겨울에 거둔 군량은 <b>${G.grain}</b>, 전투 뒤 남은 것은 <b>${gl}</b>, 남은 농노는 <b>${G.serfs}호</b>, 불만은 <b>${G.anger}</b>였다. `;
+  const harvests=G.hist.map(h=>h.harvest||0);
+  vd+=`<br><br>다섯 겨울에 거둔 군량은 <b>${harvests.join(' · ')}</b>, 마지막 전투 뒤 남은 것은 <b>${gl}</b>, 남은 농노는 <b>${G.serfs}호</b>, 불만은 <b>${G.anger}</b>점이었다. `;
   if(remain.length<=1)vd+=`당신은 땅을 거의 다 나눠 주었다. 검은 모였으나 <b>먹일 것이 빠듯했다</b>. `;
   if(remain.length>=5&&held<3)vd+=`당신은 땅을 아꼈다. 곳간은 찼으나 <b>성벽 위에 사람이 모자랐다</b>. `;
   if(remain.length>=5&&held===3)vd+=`당신은 땅을 아끼고도 성을 지켰다. 적은 봉토로 충분한 봉사를 받아낸 협상이었다. `;
-  if(weakest<35)vd+=`<br><br><b style="color:#a03010">다섯 지표 중 하나가 무너졌다(${weakest}점).</b> 성을 지켰다고 다 지킨 것은 아니다 — 무엇을 대가로 치렀는지 위 다섯 칸이 말해 준다. `;
+  if(broken)vd+=`<br><br><b style="color:#a03010">다섯 지표 중 ${['','하나가','둘이','셋이','넷이','다섯 모두'][broken]} 무너졌다(가장 낮은 것 ${weakest}점).</b> 성을 지켰다고 다 지킨 것은 아니다 — 무엇을 대가로 치렀는지 위 다섯 칸이 말해 준다. `;
   if(heredCount)vd+=`<br><br><b>주군의 권한 ${sLord}점.</b> 세습으로 넘긴 <b>${heredCount}조각</b>은 이제 회수할 수 없다.
    해마다 값을 다시 부르는 흥정에서 벗어나려고 당신이 판 것은, 당신 후손의 권한이었다. `;
   else vd+=`<br><br><b>주군의 권한 ${sLord}점.</b> 당신은 어떤 땅도 영구히 넘기지 않았다.
@@ -3360,8 +3420,8 @@ function enterEnd(){
     그것을 정할 권한은 그들에게 없었다.<span class="src" data-s="serf">📖</span> `;
   sv+=fled?`견디지 못하고 달아난 집이 <b>${fled}호</b>다. 법으로는 떠날 수 없는 사람들이었다. `
           :`끝까지 달아난 집은 없었다. 그것을 만족이라 불러도 될지는 다른 문제다. `;
-  sv+=`남은 농노는 <b>${G.serfs}호</b>, 불만은 <b>${G.anger}</b>였다.`;
-  sv+=`<br><br>마지막 해 세 경작지의 지력은 <b>${G.fields.map(f=>Math.round(f.fert)).join(' · ')}</b>였다. `;
+  sv+=`남은 농노는 <b>${G.serfs}호</b>, 불만은 <b>${G.anger}</b>점이었다.`;
+  sv+=`<br><br>마지막 해 세 경작지의 지력은 <b>${G.fields.map(f=>Math.round(f.fert)).join(' · ')}</b>점이었다. `;
   sv+=worst<30?`한 밭은 이미 흙이 아니라 먼지다. 삼포를 돌리지 않은 대가는 결국 이 사람들이 치른다.<span class="src" data-s="threefield">📖</span>`
               :`땅은 다음 사람에게 넘길 만한 상태로 남았다.<span class="src" data-s="threefield">📖</span>`;
   sv+=`</div>`;
@@ -3412,6 +3472,7 @@ function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
 function jong(w){w=String(w).trim();const c=w.charCodeAt(w.length-1);
   return (c>=0xAC00&&c<=0xD7A3)?(c-0xAC00)%28:-1;}
 function J(w,a,b){const j=jong(w);return w+(j<0?b:(j?a:b));}            // J(n,'을','를')
+function Jp(w,a,b){const j=jong(w);return j<0?b:(j?a:b);}                // 조사만 — 굵게 쓴 이름 뒤에 붙일 때
 function Jro(w){const j=jong(w);return w+((j<0||j===0||j===8)?'로':'으로');}
 function rnd(a){return a[Math.floor(Math.random()*a.length)];}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
